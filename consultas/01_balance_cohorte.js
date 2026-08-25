@@ -30,35 +30,52 @@ if (
 print("=== Consulta 1: balance de la cohorte por estación ===");
 print("Cada viaje aporta un retiro y un arribo. Balance = arribos - retiros.");
 
-var retirosPorEstacion = viajes.aggregate([
+var pipelineRetiros = [
   {
     $group: {
       _id: "$retiro.estacionId",
       retiros: { $sum: 1 }
     }
   },
-  { $sort: { _id: 1 } }
-]).toArray();
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id",
+      retiros: 1
+    }
+  },
+  { $sort: { estacionId: 1 } }
+];
 
-var arribosPorEstacion = viajes.aggregate([
+var pipelineArribos = [
   {
     $group: {
       _id: "$arribo.estacionId",
       arribos: { $sum: 1 }
     }
   },
-  { $sort: { _id: 1 } }
-]).toArray();
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id",
+      arribos: 1
+    }
+  },
+  { $sort: { estacionId: 1 } }
+];
+
+var retirosPorEstacion = viajes.aggregate(pipelineRetiros).toArray();
+var arribosPorEstacion = viajes.aggregate(pipelineArribos).toArray();
 
 var resumenPorEstacion = {};
 var i;
 
 for (i = 0; i < retirosPorEstacion.length; i += 1) {
-  obtenerResumen(resumenPorEstacion, retirosPorEstacion[i]._id).retiros = retirosPorEstacion[i].retiros;
+  obtenerResumen(resumenPorEstacion, retirosPorEstacion[i].estacionId).retiros = retirosPorEstacion[i].retiros;
 }
 
 for (i = 0; i < arribosPorEstacion.length; i += 1) {
-  obtenerResumen(resumenPorEstacion, arribosPorEstacion[i]._id).arribos = arribosPorEstacion[i].arribos;
+  obtenerResumen(resumenPorEstacion, arribosPorEstacion[i].estacionId).arribos = arribosPorEstacion[i].arribos;
 }
 
 var documentosEstacion = estaciones.find(
@@ -113,9 +130,11 @@ Object.keys(resumenPorEstacion).forEach(function (estacionId) {
   }
 });
 
-filasCatalogadas.sort(function (a, b) {
-  if (b.magnitud !== a.magnitud) {
-    return b.magnitud - a.magnitud;
+var estacionesEntrada = filasCatalogadas.filter(function (fila) {
+  return fila.balance > 0;
+}).sort(function (a, b) {
+  if (b.balance !== a.balance) {
+    return b.balance - a.balance;
   }
   if (b.movimientos !== a.movimientos) {
     return b.movimientos - a.movimientos;
@@ -127,7 +146,36 @@ filasCatalogadas.sort(function (a, b) {
     return 1;
   }
   return 0;
-});
+}).slice(0, 5);
+
+var estacionesSalida = filasCatalogadas.filter(function (fila) {
+  return fila.balance < 0;
+}).sort(function (a, b) {
+  if (a.balance !== b.balance) {
+    return a.balance - b.balance;
+  }
+  if (b.movimientos !== a.movimientos) {
+    return b.movimientos - a.movimientos;
+  }
+  if (a.estacionId < b.estacionId) {
+    return -1;
+  }
+  if (a.estacionId > b.estacionId) {
+    return 1;
+  }
+  return 0;
+}).slice(0, 5);
+
+function resumirBalance(fila) {
+  return {
+    estacionId: fila.estacionId,
+    alcaldia: fila.alcaldia,
+    colonia: fila.colonia,
+    retiros: fila.retiros,
+    arribos: fila.arribos,
+    balance: fila.balance
+  };
+}
 
 filasNoCatalogadas.sort(function (a, b) {
   if (a.estacionId < b.estacionId) {
@@ -178,9 +226,11 @@ if (
 
 print("\nControl de la cohorte:");
 printjson(control);
-print("\nExtremo no catalogado conservado para auditoría:");
-printjson(filasNoCatalogadas);
-print("\nQuince estaciones catalogadas con mayor magnitud de balance:");
-printjson(filasCatalogadas.slice(0, 15));
-print("\nInterpretación: un balance positivo indica más arribos; uno negativo indica más retiros dentro de la cohorte.");
-print("El balance no prueba que una estación haya quedado llena o vacía.");
+print("\nExtremo no catalogado conservado para control técnico:");
+printjson(filasNoCatalogadas[0]);
+print("\nCinco estaciones con mayor presión neta de entrada observada:");
+printjson(estacionesEntrada.map(resumirBalance));
+print("\nCinco estaciones con mayor presión neta de salida observada:");
+printjson(estacionesSalida.map(resumirBalance));
+print("\nLectura ejecutiva: valores positivos indican más arribos y valores negativos más retiros dentro de la cohorte.");
+print("Estos balances priorizan monitoreo; no representan inventario, capacidad ni disponibilidad de bicicletas.");

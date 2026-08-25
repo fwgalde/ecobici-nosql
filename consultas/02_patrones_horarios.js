@@ -75,7 +75,7 @@ if (
 print("=== Consulta 2: patrones por día y hora local ===");
 print("Se usan los momentos reales de cada extremo dentro de [2026-01-01, 2026-04-01) en America/Mexico_City.");
 
-var retirosAgrupados = viajes.aggregate([
+var pipelineRetiros = [
   {
     $match: {
       "calidad.retiroEnCatalogo": true,
@@ -86,30 +86,46 @@ var retirosAgrupados = viajes.aggregate([
     }
   },
   {
+    $addFields: {
+      diaSemanaRetiro: {
+        $dateToString: {
+          format: "%w",
+          date: "$retiro.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      },
+      horaRetiro: {
+        $dateToString: {
+          format: "%H",
+          date: "$retiro.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      }
+    }
+  },
+  {
     $group: {
       _id: {
         estacionId: "$retiro.estacionId",
-        diaSemana: {
-          $dateToString: {
-            format: "%w",
-            date: "$retiro.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        },
-        hora: {
-          $dateToString: {
-            format: "%H",
-            date: "$retiro.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        }
+        diaSemana: "$diaSemanaRetiro",
+        hora: "$horaRetiro"
       },
       retiros: { $sum: 1 }
     }
-  }
-]).toArray();
+  },
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id.estacionId",
+      diaSemana: "$_id.diaSemana",
+      hora: "$_id.hora",
+      retiros: 1
+    }
+  },
+  { $sort: { estacionId: 1, diaSemana: 1, hora: 1 } }
+];
 
-var arribosAgrupados = viajes.aggregate([
+var pipelineArribos = [
   {
     $match: {
       "calidad.arriboEnCatalogo": true,
@@ -120,28 +136,47 @@ var arribosAgrupados = viajes.aggregate([
     }
   },
   {
+    $addFields: {
+      diaSemanaArribo: {
+        $dateToString: {
+          format: "%w",
+          date: "$arribo.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      },
+      horaArribo: {
+        $dateToString: {
+          format: "%H",
+          date: "$arribo.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      }
+    }
+  },
+  {
     $group: {
       _id: {
         estacionId: "$arribo.estacionId",
-        diaSemana: {
-          $dateToString: {
-            format: "%w",
-            date: "$arribo.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        },
-        hora: {
-          $dateToString: {
-            format: "%H",
-            date: "$arribo.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        }
+        diaSemana: "$diaSemanaArribo",
+        hora: "$horaArribo"
       },
       arribos: { $sum: 1 }
     }
-  }
-]).toArray();
+  },
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id.estacionId",
+      diaSemana: "$_id.diaSemana",
+      hora: "$_id.hora",
+      arribos: 1
+    }
+  },
+  { $sort: { estacionId: 1, diaSemana: 1, hora: 1 } }
+];
+
+var retirosAgrupados = viajes.aggregate(pipelineRetiros).toArray();
+var arribosAgrupados = viajes.aggregate(pipelineArribos).toArray();
 
 var filasPorClave = {};
 var i;
@@ -149,18 +184,18 @@ var i;
 for (i = 0; i < retirosAgrupados.length; i += 1) {
   obtenerFila(
     filasPorClave,
-    retirosAgrupados[i]._id.estacionId,
-    retirosAgrupados[i]._id.diaSemana,
-    retirosAgrupados[i]._id.hora
+    retirosAgrupados[i].estacionId,
+    retirosAgrupados[i].diaSemana,
+    retirosAgrupados[i].hora
   ).retiros = retirosAgrupados[i].retiros;
 }
 
 for (i = 0; i < arribosAgrupados.length; i += 1) {
   obtenerFila(
     filasPorClave,
-    arribosAgrupados[i]._id.estacionId,
-    arribosAgrupados[i]._id.diaSemana,
-    arribosAgrupados[i]._id.hora
+    arribosAgrupados[i].estacionId,
+    arribosAgrupados[i].diaSemana,
+    arribosAgrupados[i].hora
   ).arribos = arribosAgrupados[i].arribos;
 }
 
@@ -246,6 +281,15 @@ patronesEstacion.sort(function (a, b) {
   return compararTexto(a.horaLocal, b.horaLocal);
 });
 
+var patronesPrioritarios = [];
+var estacionesIncluidas = {};
+for (i = 0; i < patronesEstacion.length && patronesPrioritarios.length < 5; i += 1) {
+  if (!estacionesIncluidas[patronesEstacion[i].estacionId]) {
+    estacionesIncluidas[patronesEstacion[i].estacionId] = true;
+    patronesPrioritarios.push(patronesEstacion[i]);
+  }
+}
+
 var resumenHorario = [];
 Object.keys(resumenPorTipoHora).forEach(function (clave) {
   var fila = resumenPorTipoHora[clave];
@@ -268,41 +312,46 @@ resumenHorario.sort(function (a, b) {
   return compararTexto(a.horaLocal, b.horaLocal);
 });
 
-var horasLaborablesMayorActividad = resumenHorario.filter(function (fila) {
-  return fila.tipoDia === "laborable";
-}).sort(function (a, b) {
-  if (b.movimientosPromedioPorDia !== a.movimientosPromedioPorDia) {
-    return b.movimientosPromedioPorDia - a.movimientosPromedioPorDia;
-  }
-  return compararTexto(a.horaLocal, b.horaLocal);
-}).slice(0, 5);
+function seleccionarHoras(tipoDia, mayorActividad) {
+  return resumenHorario.filter(function (fila) {
+    return fila.tipoDia === tipoDia;
+  }).sort(function (a, b) {
+    if (a.movimientosPromedioPorDia !== b.movimientosPromedioPorDia) {
+      return mayorActividad ?
+        b.movimientosPromedioPorDia - a.movimientosPromedioPorDia :
+        a.movimientosPromedioPorDia - b.movimientosPromedioPorDia;
+    }
+    return compararTexto(a.horaLocal, b.horaLocal);
+  }).slice(0, 3);
+}
 
-var horasLaborablesMenorActividad = resumenHorario.filter(function (fila) {
-  return fila.tipoDia === "laborable";
-}).sort(function (a, b) {
-  if (a.movimientosPromedioPorDia !== b.movimientosPromedioPorDia) {
-    return a.movimientosPromedioPorDia - b.movimientosPromedioPorDia;
-  }
-  return compararTexto(a.horaLocal, b.horaLocal);
-}).slice(0, 5);
+var horasLaborablesMayorActividad = seleccionarHoras("laborable", true);
+var horasLaborablesMenorActividad = seleccionarHoras("laborable", false);
+var horasFinSemanaMayorActividad = seleccionarHoras("fin_semana", true);
+var horasFinSemanaMenorActividad = seleccionarHoras("fin_semana", false);
 
-var horasFinSemanaMayorActividad = resumenHorario.filter(function (fila) {
-  return fila.tipoDia === "fin_semana";
-}).sort(function (a, b) {
-  if (b.movimientosPromedioPorDia !== a.movimientosPromedioPorDia) {
-    return b.movimientosPromedioPorDia - a.movimientosPromedioPorDia;
-  }
-  return compararTexto(a.horaLocal, b.horaLocal);
-}).slice(0, 5);
+function resumirPatron(fila) {
+  return {
+    estacionId: fila.estacionId,
+    alcaldia: fila.alcaldia,
+    colonia: fila.colonia,
+    dia: fila.dia,
+    horaLocal: fila.horaLocal,
+    balancePromedio: fila.balancePromedio,
+    movimientosPromedio: fila.movimientosPromedio
+  };
+}
 
-var horasFinSemanaMenorActividad = resumenHorario.filter(function (fila) {
-  return fila.tipoDia === "fin_semana";
-}).sort(function (a, b) {
-  if (a.movimientosPromedioPorDia !== b.movimientosPromedioPorDia) {
-    return a.movimientosPromedioPorDia - b.movimientosPromedioPorDia;
-  }
-  return compararTexto(a.horaLocal, b.horaLocal);
-}).slice(0, 5);
+function resumirHora(fila) {
+  return {
+    tipoDia: fila.tipoDia,
+    horaLocal: fila.horaLocal,
+    retirosPromedioPorDia: fila.retirosPromedioPorDia,
+    arribosPromedioPorDia: fila.arribosPromedioPorDia,
+    balancePromedioPorDia: fila.balancePromedioPorDia,
+    movimientosPromedioPorDia: fila.movimientosPromedioPorDia
+  };
+}
 
 if (
   totalRetiros !== 4707132 ||
@@ -322,18 +371,17 @@ printjson({
   arribosCatalogadosEnElIntervalo: totalArribos,
   balanceDeExtremosObservados: totalArribos - totalRetiros
 });
-print("\nQuince patrones estación-día-hora con mayor magnitud de balance medio direccional:");
-printjson(patronesEstacion.slice(0, 15));
-print("\nCinco horas laborables con mayor actividad observada:");
-printjson(horasLaborablesMayorActividad);
-print("\nCinco horas laborables con menor actividad observada:");
-printjson(horasLaborablesMenorActividad);
-print("\nCinco horas de fin de semana con mayor actividad observada:");
-printjson(horasFinSemanaMayorActividad);
-print("\nCinco horas de fin de semana con menor actividad observada:");
-printjson(horasFinSemanaMenorActividad);
-print("\nResumen completo por tipo de día y hora:");
-printjson(resumenHorario);
-print("\nInterpretación: las cinco horas de mayor actividad constituyen el pico observado y las cinco de menor actividad forman su contraste; ambas se derivan de los datos.");
+print("\nCinco estaciones distintas y su patrón horario más pronunciado:");
+printjson(patronesPrioritarios.map(resumirPatron));
+print("\nTres horas laborables con mayor actividad observada:");
+printjson(horasLaborablesMayorActividad.map(resumirHora));
+print("\nTres horas laborables con menor actividad observada:");
+printjson(horasLaborablesMenorActividad.map(resumirHora));
+print("\nTres horas de fin de semana con mayor actividad observada:");
+printjson(horasFinSemanaMayorActividad.map(resumirHora));
+print("\nTres horas de fin de semana con menor actividad observada:");
+printjson(horasFinSemanaMenorActividad.map(resumirHora));
+print("\nLectura ejecutiva: cada estación aparece una sola vez con su combinación de día y hora más crítica.");
+print("Las tres horas de mayor actividad forman el pico observado y las tres de menor actividad su contraste; ambas se derivan de los datos.");
 print("La magnitud del balance medio direccional es el valor absoluto del balance acumulado dividido entre los días comparables; los cambios de signo se cancelan y por eso no equivale al promedio de magnitudes diarias.");
-print("El balance del intervalo puede diferir de cero porque los archivos se seleccionan por mes de arribo y no forman un registro completo de todos los eventos del trimestre.");
+print("Los resultados describen extremos observados en la cohorte y no inventarios de bicicletas.");

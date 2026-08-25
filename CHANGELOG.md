@@ -25,6 +25,11 @@
 - Se implementaron tres consultas reproducibles para el balance de la cohorte, los patrones por día y hora local y la consistencia durante doce semanas completas.
 - Se limitaron los pipelines a operadores y patrones practicados en los ejemplos del repositorio, sin índices, validadores ni colecciones derivadas.
 - Se documentó la diferencia entre la cohorte seleccionada por mes de arribo y un registro completo de eventos del trimestre.
+- Se ejecutaron las tres consultas en Learner Lab; los controles de la cohorte, los intervalos horarios y las doce semanas terminaron correctamente con código `0`.
+- Se refactorizaron las consultas para declarar pipelines con las secuencias de etapas utilizadas en los retos y ejemplos del curso.
+- Se redujo la salida a rankings ejecutivos: cinco estaciones por sentido en el balance, cinco patrones horarios únicos con contrastes de tres horas y cinco estaciones por categoría semanal.
+- Se reservó JavaScript para combinar resultados agregados, completar los doce intervalos conocidos y calcular cambios consecutivos, de acuerdo con los ejemplos temporales del curso.
+- Se corrigió la interpretación de los empates semanales: seis semanas de entrada y seis de salida forman un patrón mixto, no una dirección dominante.
 
 ## Próximas fases
 

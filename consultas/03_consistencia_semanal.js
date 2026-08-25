@@ -84,7 +84,7 @@ if (
 print("=== Consulta 3: consistencia entre semanas completas ===");
 print("Se comparan doce intervalos semanales locales completos dentro de la cohorte observada, desde el 5 de enero hasta antes del 30 de marzo de 2026.");
 
-var retirosPorFecha = viajes.aggregate([
+var pipelineRetiros = [
   {
     $match: {
       "calidad.retiroEnCatalogo": true,
@@ -95,23 +95,37 @@ var retirosPorFecha = viajes.aggregate([
     }
   },
   {
+    $addFields: {
+      fechaLocalRetiro: {
+        $dateToString: {
+          format: "%Y-%m-%d",
+          date: "$retiro.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      }
+    }
+  },
+  {
     $group: {
       _id: {
         estacionId: "$retiro.estacionId",
-        fechaLocal: {
-          $dateToString: {
-            format: "%Y-%m-%d",
-            date: "$retiro.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        }
+        fechaLocal: "$fechaLocalRetiro"
       },
       retiros: { $sum: 1 }
     }
-  }
-]).toArray();
+  },
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id.estacionId",
+      fechaLocal: "$_id.fechaLocal",
+      retiros: 1
+    }
+  },
+  { $sort: { estacionId: 1, fechaLocal: 1 } }
+];
 
-var arribosPorFecha = viajes.aggregate([
+var pipelineArribos = [
   {
     $match: {
       "calidad.arriboEnCatalogo": true,
@@ -122,21 +136,38 @@ var arribosPorFecha = viajes.aggregate([
     }
   },
   {
+    $addFields: {
+      fechaLocalArribo: {
+        $dateToString: {
+          format: "%Y-%m-%d",
+          date: "$arribo.ocurrioEn",
+          timezone: ZONA_HORARIA
+        }
+      }
+    }
+  },
+  {
     $group: {
       _id: {
         estacionId: "$arribo.estacionId",
-        fechaLocal: {
-          $dateToString: {
-            format: "%Y-%m-%d",
-            date: "$arribo.ocurrioEn",
-            timezone: ZONA_HORARIA
-          }
-        }
+        fechaLocal: "$fechaLocalArribo"
       },
       arribos: { $sum: 1 }
     }
-  }
-]).toArray();
+  },
+  {
+    $project: {
+      _id: 0,
+      estacionId: "$_id.estacionId",
+      fechaLocal: "$_id.fechaLocal",
+      arribos: 1
+    }
+  },
+  { $sort: { estacionId: 1, fechaLocal: 1 } }
+];
+
+var retirosPorFecha = viajes.aggregate(pipelineRetiros).toArray();
+var arribosPorFecha = viajes.aggregate(pipelineArribos).toArray();
 
 var documentosEstacion = estaciones.find(
   {},
@@ -152,37 +183,36 @@ for (i = 0; i < documentosEstacion.length; i += 1) {
 var semanasPorClave = {};
 
 for (i = 0; i < retirosPorFecha.length; i += 1) {
-  var semanaRetiro = indiceSemana(retirosPorFecha[i]._id.fechaLocal);
+  var semanaRetiro = indiceSemana(retirosPorFecha[i].fechaLocal);
   if (semanaRetiro < 0 || semanaRetiro >= ETIQUETAS_SEMANA.length) {
     throw new Error("Un retiro quedó fuera de las doce semanas completas.");
   }
-  if (!catalogo[retirosPorFecha[i]._id.estacionId]) {
+  if (!catalogo[retirosPorFecha[i].estacionId]) {
     throw new Error("Un retiro marcado como catalogado no existe en ecobici_estaciones.");
   }
   obtenerSemana(
     semanasPorClave,
-    retirosPorFecha[i]._id.estacionId,
+    retirosPorFecha[i].estacionId,
     semanaRetiro
   ).retiros += retirosPorFecha[i].retiros;
 }
 
 for (i = 0; i < arribosPorFecha.length; i += 1) {
-  var semanaArribo = indiceSemana(arribosPorFecha[i]._id.fechaLocal);
+  var semanaArribo = indiceSemana(arribosPorFecha[i].fechaLocal);
   if (semanaArribo < 0 || semanaArribo >= ETIQUETAS_SEMANA.length) {
     throw new Error("Un arribo quedó fuera de las doce semanas completas.");
   }
-  if (!catalogo[arribosPorFecha[i]._id.estacionId]) {
+  if (!catalogo[arribosPorFecha[i].estacionId]) {
     throw new Error("Un arribo marcado como catalogado no existe en ecobici_estaciones.");
   }
   obtenerSemana(
     semanasPorClave,
-    arribosPorFecha[i]._id.estacionId,
+    arribosPorFecha[i].estacionId,
     semanaArribo
   ).arribos += arribosPorFecha[i].arribos;
 }
 
 var resultados = [];
-var seriesPorEstacion = {};
 var totalRetiros = 0;
 var totalArribos = 0;
 var clavesConsumidas = 0;
@@ -251,18 +281,17 @@ for (i = 0; i < documentosEstacion.length; i += 1) {
     });
   }
 
-  var semanasDominantes = semanasEntrada > semanasSalida ? semanasEntrada : semanasSalida;
+  var semanasSentidoMasFrecuente = semanasEntrada > semanasSalida ? semanasEntrada : semanasSalida;
   var semanasConDesequilibrio = semanasEntrada + semanasSalida;
-  var direccion;
+  var direccionPredominante;
   if (semanasConDesequilibrio === 0) {
-    direccion = "neutral";
+    direccionPredominante = "neutral";
   } else if (semanasEntrada === semanasSalida) {
-    direccion = "mixta";
+    direccionPredominante = "mixta";
   } else {
-    direccion = semanasEntrada > semanasSalida ? "entrada" : "salida";
+    direccionPredominante = semanasEntrada > semanasSalida ? "entrada" : "salida";
   }
 
-  seriesPorEstacion[estacion._id] = serie;
   resultados.push({
     estacionId: estacion._id,
     alcaldia: estacion.alcaldia,
@@ -273,9 +302,9 @@ for (i = 0; i < documentosEstacion.length; i += 1) {
     semanasNeutras: semanasNeutras,
     semanasConMovimientos: semanasConMovimientos,
     semanasConDesequilibrio: semanasConDesequilibrio,
-    direccionDominante: direccion,
-    consistenciaDireccion: semanasConDesequilibrio === 0 ? 0 : redondear(semanasDominantes / semanasConDesequilibrio, 3),
-    recurrenciaDireccional: redondear(semanasDominantes / ETIQUETAS_SEMANA.length, 3),
+    direccionPredominante: direccionPredominante,
+    consistenciaDireccion: semanasConDesequilibrio === 0 ? 0 : redondear(semanasSentidoMasFrecuente / semanasConDesequilibrio, 3),
+    recurrenciaDireccional: redondear(semanasSentidoMasFrecuente / ETIQUETAS_SEMANA.length, 3),
     balancePromedio: redondear(sumaBalance / ETIQUETAS_SEMANA.length, 3),
     magnitudPromedio: redondear(sumaMagnitud / ETIQUETAS_SEMANA.length, 3),
     balanceMinimo: balanceMinimo,
@@ -285,7 +314,7 @@ for (i = 0; i < documentosEstacion.length; i += 1) {
   });
 }
 
-var estables = resultados.filter(function (fila) {
+var recurrentes = resultados.filter(function (fila) {
   return fila.semanasConDesequilibrio > 0;
 }).sort(function (a, b) {
   if (b.recurrenciaDireccional !== a.recurrenciaDireccional) {
@@ -299,6 +328,14 @@ var estables = resultados.filter(function (fila) {
   }
   return compararTexto(a.estacionId, b.estacionId);
 });
+
+var recurrentesEntrada = recurrentes.filter(function (fila) {
+  return fila.direccionPredominante === "entrada";
+}).slice(0, 5);
+
+var recurrentesSalida = recurrentes.filter(function (fila) {
+  return fila.direccionPredominante === "salida";
+}).slice(0, 5);
 
 var variables = resultados.filter(function (fila) {
   return fila.semanasEntrada > 0 && fila.semanasSalida > 0;
@@ -317,6 +354,22 @@ var variables = resultados.filter(function (fila) {
   }
   return compararTexto(a.estacionId, b.estacionId);
 });
+
+function resumirConsistencia(fila) {
+  return {
+    estacionId: fila.estacionId,
+    alcaldia: fila.alcaldia,
+    colonia: fila.colonia,
+    semanasEntrada: fila.semanasEntrada,
+    semanasSalida: fila.semanasSalida,
+    semanasNeutras: fila.semanasNeutras,
+    direccionPredominante: fila.direccionPredominante,
+    recurrenciaDireccional: fila.recurrenciaDireccional,
+    consistenciaDireccion: fila.consistenciaDireccion,
+    balancePromedio: fila.balancePromedio,
+    saltoMaximoConsecutivo: fila.saltoMaximoConsecutivo
+  };
+}
 
 for (i = 0; i < resultados.length; i += 1) {
   if (
@@ -340,22 +393,6 @@ if (
   throw new Error("El resumen semanal no coincide con los conteos auditados de los CSV.");
 }
 
-var seriesDestacadas = [];
-estables.slice(0, 3).forEach(function (fila) {
-  seriesDestacadas.push({
-    estacionId: fila.estacionId,
-    clasificacion: "recurrente",
-    serie: seriesPorEstacion[fila.estacionId]
-  });
-});
-variables.slice(0, 3).forEach(function (fila) {
-  seriesDestacadas.push({
-    estacionId: fila.estacionId,
-    clasificacion: "cambio_direccion",
-    serie: seriesPorEstacion[fila.estacionId]
-  });
-});
-
 print("\nControl del intervalo:");
 printjson({
   zonaHoraria: ZONA_HORARIA,
@@ -366,13 +403,13 @@ printjson({
   arribosCatalogadosEnElIntervalo: totalArribos,
   balanceDeExtremosObservados: totalArribos - totalRetiros
 });
-print("\nQuince estaciones con mayor recurrencia direccional, consistencia y magnitud:");
-printjson(estables.slice(0, 15));
-print("\nQuince estaciones que cambian de dirección, priorizadas por evidencia, menor consistencia y mayor salto consecutivo:");
-printjson(variables.slice(0, 15));
-print("\nSeries semanales de tres casos recurrentes y tres con cambio de dirección:");
-printjson(seriesDestacadas);
-print("\nInterpretación: la recurrencia es la proporción de las doce semanas que repite la dirección dominante; la consistencia compara esa dirección sólo entre semanas no neutras.");
-print("Las semanas neutras no se tratan como cambios de dirección, y los casos cambiantes se priorizan por la cantidad de semanas con desequilibrio.");
+print("\nCinco estaciones con patrón de entrada más recurrente:");
+printjson(recurrentesEntrada.map(resumirConsistencia));
+print("\nCinco estaciones con patrón de salida más recurrente:");
+printjson(recurrentesSalida.map(resumirConsistencia));
+print("\nCinco estaciones con mayor evidencia de cambio de dirección:");
+printjson(variables.slice(0, 5).map(resumirConsistencia));
+print("\nLectura ejecutiva: la recurrencia es la mayor proporción alcanzada por entrada o salida respecto de las doce semanas.");
+print("La consistencia usa sólo semanas no neutras; un empate de seis semanas de entrada y seis de salida se clasifica como mixto y obtiene 0.5 en ambos indicadores.");
 print("El salto máximo consecutivo es el mayor cambio entre dos semanas adyacentes y no representa por sí solo toda la variabilidad.");
 print("Estos indicadores describen extremos observados en los viajes cargados y no inventarios de bicicletas.");
