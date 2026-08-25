@@ -34,6 +34,7 @@
 - Se añadió una consulta geoespacial basada en `2dsphere` y `$geoNear` que contrasta las tres estaciones más cercanas dentro de 1 km en el mismo día y hora del patrón crítico.
 - Se añadió una priorización ejecutiva sin puntuaciones ponderadas, ordenada por recurrencia, consistencia y magnitud semanal.
 - Se integraron cinco consultas reproducibles en el ejecutor de la fase y se mantuvieron únicamente patrones presentes en los retos y ejemplos del curso.
+- Se corrigió la comprobación del índice geoespacial para consultar el catálogo de índices en MongoDB Shell 4.4.29.
 
 ## Próximas fases
 

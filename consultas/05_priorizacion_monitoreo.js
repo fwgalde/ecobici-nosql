@@ -442,10 +442,24 @@ var prioridadSalida = resultados.filter(function (fila) {
   return fila.direccionPredominante === "salida" && fila.patronCritico !== null;
 }).sort(ordenarPrioridad).slice(0, 5);
 
-var indiceGeografico = estaciones.createIndex(
+estaciones.createIndex(
   { ubicacion: "2dsphere" },
   { name: "ubicacion_2dsphere" }
 );
+
+var indiceGeografico = null;
+var indicesEstaciones = estaciones.getIndexes();
+
+for (i = 0; i < indicesEstaciones.length; i += 1) {
+  if (
+    indicesEstaciones[i].name === "ubicacion_2dsphere" &&
+    indicesEstaciones[i].key &&
+    indicesEstaciones[i].key.ubicacion === "2dsphere"
+  ) {
+    indiceGeografico = indicesEstaciones[i].name;
+    break;
+  }
+}
 
 if (indiceGeografico !== "ubicacion_2dsphere") {
   throw new Error("No se pudo confirmar el índice geoespacial requerido por la síntesis.");
