@@ -22,10 +22,10 @@
 - Se ejecutó la carga en Learner Lab con MongoDB Server y MongoDB Shell 4.4.29 y `mongoimport` 100.17.0.
 - Se importaron 4 707 285 viajes y 677 estaciones sin documentos fallidos; la verificación integral terminó con código `0`.
 - Se corrigió la línea vacía final del manifiesto de hashes detectada durante la ejecución.
-- Se implementaron tres consultas reproducibles para el balance de la cohorte, los patrones por día y hora local y la consistencia durante doce semanas completas.
+- Se implementaron tres consultas reproducibles para el balance del conjunto de viajes, los patrones por día y hora local y la consistencia durante doce semanas completas.
 - Se limitaron los pipelines a operadores y patrones practicados en los ejemplos del repositorio, sin índices, validadores ni colecciones derivadas.
-- Se documentó la diferencia entre la cohorte seleccionada por mes de arribo y un registro completo de eventos del trimestre.
-- Se ejecutaron las tres consultas en Learner Lab; los controles de la cohorte, los intervalos horarios y las doce semanas terminaron correctamente con código `0`.
+- Se documentó la diferencia entre el conjunto seleccionado por mes de arribo y un registro completo de eventos del trimestre.
+- Se ejecutaron las tres consultas en Learner Lab; los controles del conjunto de viajes, los intervalos horarios y las doce semanas terminaron correctamente con código `0`.
 - Se refactorizaron las consultas para declarar pipelines con las secuencias de etapas utilizadas en los retos y ejemplos del curso.
 - Se redujo la salida a rankings ejecutivos: cinco estaciones por sentido en el balance, cinco patrones horarios únicos con contrastes de tres horas y cinco estaciones por categoría semanal.
 - Se reservó JavaScript para combinar resultados agregados, completar los doce intervalos conocidos y calcular cambios consecutivos, de acuerdo con los ejemplos temporales del curso.
@@ -59,6 +59,7 @@
 - Se generó un reporte final de seis páginas con portada, integración de las semanas 1 a 5, cinco pies de figura, resultados, límites y una mejora posible.
 - Se añadió al README el orden completo de ejecución y la distribución del reporte para una exposición máxima de cinco minutos.
 - Se amplió la revisión técnica del reporte con diagramas de referencia manual, conversión temporal a BSON `Date` y tratamiento auditable de los 114 viajes relacionados con `1000`.
+- Se simplificó la terminología del conjunto analizado y se renombró la primera consulta para que su propósito resulte inmediato.
 
 ## Próximas fases
 

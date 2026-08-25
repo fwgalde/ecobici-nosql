@@ -566,7 +566,7 @@
 
     <div class="time-flow" aria-label="Diagrama de conversión de una fecha local a BSON Date y su interpretación">
       <div class="time-step"><strong>1 · CSV de origen</strong><code>01/01/2026</code><br><code>00:06:57</code><br>Hora publicada de retiro.</div>
-      <div class="time-step"><strong>2 · Transformación</strong>Se interpreta en Ciudad de México y, para esta cohorte UTC−06:00, se agregan seis horas.</div>
+      <div class="time-step"><strong>2 · Transformación</strong>Se interpreta en Ciudad de México y, para los datos de este periodo en UTC−06:00, se agregan seis horas.</div>
       <div class="time-step"><strong>3 · Extended JSON</strong><code>{"$date":<br>"2026-01-01T06:06:57Z"}</code><br><code>Z</code> indica UTC.</div>
       <div class="time-step"><strong>4 · Consulta local</strong><code>mongoimport</code> crea un BSON <code>Date</code>; <code>$dateToString</code> con <code>America/Mexico_City</code> recupera las 00:06:57.</div>
     </div>
