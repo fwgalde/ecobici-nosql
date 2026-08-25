@@ -332,3 +332,33 @@ Código final de seguridad: 0
 ```
 
 La instancia local del curso no habilita autorización. Por ello, el ejecutor crea e inspecciona roles, pero no crea usuarios ni contraseñas y no presenta las pruebas negativas diseñadas como denegaciones ejecutadas. La vista tampoco sustituye las cinco consultas analíticas ni demuestra cifrado, conservación, respaldos o administración de credenciales; esos controles requieren un entorno configurado para comprobarlos.
+
+## Entrega final
+
+El reporte de seis páginas integra las semanas 1 a 5 e incluye cinco capturas con contexto, resultado y demostración. Está disponible en [`entrega/fernando_ugalde_proyecto_nosql.pdf`](entrega/fernando_ugalde_proyecto_nosql.pdf); su fuente reproducible se conserva en [`entrega/reporte_final.html`](entrega/reporte_final.html).
+
+Desde un estado conocido y con los cuatro CSV auditados en `proyecto_final/ecobici/datos/raw/`, el orden completo de ejecución es:
+
+```bash
+cd ~/m6-nosql
+
+bash setup/setup.sh
+bash proyecto_final/ecobici/scripts/instalar_mongoimport.sh
+bash proyecto_final/ecobici/scripts/cargar_datos.sh
+bash proyecto_final/ecobici/scripts/ejecutar_consultas.sh
+bash proyecto_final/ecobici/scripts/ejecutar_indices.sh
+bash proyecto_final/ecobici/scripts/ejecutar_validaciones.sh
+bash proyecto_final/ecobici/scripts/ejecutar_seguridad.sh
+```
+
+El reporte puede utilizarse directamente para la exposición máxima de cinco minutos con esta distribución:
+
+| Tiempo | Páginas | Contenido |
+|---|---:|---|
+| 0:00–0:40 | 1–2 | Problema, personas usuarias y pregunta principal. |
+| 0:40–1:30 | 2 | Datos y decisiones del modelo documental. |
+| 1:30–3:30 | 3–4 | Consulta principal y análisis temporal y geoespacial. |
+| 3:30–4:20 | 5–6 | Índices, validación, seguridad y privacidad. |
+| 4:20–5:00 | 6 | Resultado, limitación principal y mejora posible. |
+
+La exposición debe explicar decisiones y resultados sin recorrer todo el código. Las cinco evidencias incluidas fueron obtenidas de ejecuciones finales en Learner Lab con código `0` y no contienen credenciales ni datos personales.

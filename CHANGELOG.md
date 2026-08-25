@@ -54,7 +54,11 @@
 - Se definieron roles de análisis, auditoría y administración con los recursos y acciones explícitos de los ejemplos 19 y 20 y del reto 10, sin crear usuarios ni contraseñas.
 - Se añadió una matriz de acceso con clasificación, privilegio mínimo y pruebas positivas y negativas de diseño, distinguiendo las definiciones inspeccionadas de las denegaciones pendientes.
 - Se incorporó un ejecutor reproducible para crear la vista, actualizar o crear los roles y comprobar cinco salidas minimizadas.
+- Se ejecutó la fase de seguridad en Learner Lab con código `0`; la vista minimizada y los privilegios explícitos de los tres roles fueron comprobados.
+- Se reunieron cinco capturas legibles de la consulta principal, el análisis geoespacial, los índices, las validaciones y la salida protegida.
+- Se generó un reporte final de seis páginas con portada, integración de las semanas 1 a 5, cinco pies de figura, resultados, límites y una mejora posible.
+- Se añadió al README el orden completo de ejecución y la distribución del reporte para una exposición máxima de cinco minutos.
 
 ## Próximas fases
 
-- Evidencias, reporte y exposición.
+- Entrega del PDF y exposición de cinco minutos.

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proyecto final ECOBICI</title>
+  <style>
+    :root {
+      --azul: #123a55;
+      --azul-claro: #e9f3f8;
+      --verde: #167d6b;
+      --verde-claro: #e8f5f1;
+      --naranja: #c45a2d;
+      --gris: #5a6670;
+      --borde: #cbd5db;
+      --fondo: #eef2f4;
+    }
+
+    * { box-sizing: border-box; }
+
+    @page { size: A4; margin: 0; }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: #17232b;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 9.2pt;
+      line-height: 1.34;
+    }
+
+    .page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto 8mm;
+      padding: 13mm 15mm 14mm;
+      overflow: hidden;
+      background: #fff;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 3mm;
+      color: var(--verde);
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { color: var(--azul); }
+
+    h1 {
+      margin: 0;
+      font-size: 27pt;
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin: 0 0 4mm;
+      padding-bottom: 2.4mm;
+      border-bottom: 1.5px solid var(--verde);
+      font-size: 18pt;
+      line-height: 1.12;
+    }
+
+    h3 {
+      margin: 3mm 0 1.5mm;
+      font-size: 11.5pt;
+    }
+
+    p { margin: 0 0 2.2mm; }
+
+    ul, ol {
+      margin: 1.5mm 0 2.5mm;
+      padding-left: 5mm;
+    }
+
+    li { margin-bottom: 1mm; }
+
+    code {
+      color: #1d4e68;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: .94em;
+    }
+
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22mm 20mm 18mm;
+      background:
+        linear-gradient(135deg, rgba(18, 58, 85, .97), rgba(22, 125, 107, .90)),
+        #123a55;
+      color: #fff;
+    }
+
+    .cover h1 {
+      max-width: 165mm;
+      color: #fff;
+      font-size: 32pt;
+    }
+
+    .cover .subtitle {
+      max-width: 155mm;
+      margin-top: 8mm;
+      color: #e5f2f1;
+      font-size: 14pt;
+      line-height: 1.35;
+    }
+
+    .cover .rule {
+      width: 34mm;
+      height: 1.5mm;
+      margin: 8mm 0;
+      background: #9fe2d1;
+    }
+
+    .cover-card {
+      width: 112mm;
+      padding: 7mm 8mm;
+      border: 1px solid rgba(255,255,255,.42);
+      border-radius: 3mm;
+      background: rgba(255,255,255,.10);
+      font-size: 11pt;
+    }
+
+    .cover-card strong { color: #c6f1e6; }
+
+    .cover .course {
+      color: #d9ebe8;
+      font-size: 10pt;
+    }
+
+    .lead {
+      margin-bottom: 3mm;
+      color: #34444e;
+      font-size: 10pt;
+    }
+
+    .callout {
+      margin: 2.5mm 0;
+      padding: 3mm 4mm;
+      border-left: 1.4mm solid var(--verde);
+      background: var(--verde-claro);
+    }
+
+    .warning {
+      border-left-color: var(--naranja);
+      background: #fbefe9;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+    }
+
+    .grid-60-40 {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 5mm;
+    }
+
+    .card {
+      padding: 3mm 3.5mm;
+      border: 1px solid var(--borde);
+      border-radius: 2mm;
+      background: #fff;
+    }
+
+    .card h3 { margin-top: 0; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.5mm;
+      margin: 3mm 0;
+    }
+
+    .metric {
+      padding: 3mm 2mm;
+      border-radius: 2mm;
+      background: var(--azul-claro);
+      text-align: center;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--azul);
+      font-size: 14pt;
+      line-height: 1.05;
+    }
+
+    .metric span {
+      color: var(--gris);
+      font-size: 7.8pt;
+    }
+
+    table {
+      width: 100%;
+      margin: 2mm 0 3mm;
+      border-collapse: collapse;
+      font-size: 8.2pt;
+    }
+
+    th, td {
+      padding: 1.7mm 2mm;
+      border: 1px solid var(--borde);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--azul);
+      color: #fff;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    tr:nth-child(even) td { background: #f7f9fa; }
+
+    .model {
+      display: grid;
+      grid-template-columns: 1fr 17mm 1fr;
+      align-items: center;
+      margin: 3mm 0;
+    }
+
+    .model-box {
+      padding: 3.5mm;
+      border: 1.2px solid var(--verde);
+      border-radius: 2mm;
+      background: var(--verde-claro);
+    }
+
+    .model-box strong {
+      display: block;
+      margin-bottom: 1mm;
+      color: var(--azul);
+      font-size: 10.5pt;
+    }
+
+    .arrow {
+      color: var(--verde);
+      font-size: 18pt;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    figure {
+      margin: 3mm 0 2.5mm;
+      break-inside: avoid;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      border: 1px solid #aeb9bf;
+      border-radius: 1.5mm;
+      background: #fff;
+    }
+
+    figcaption {
+      margin-top: 1.3mm;
+      color: #46545d;
+      font-size: 7.7pt;
+      line-height: 1.28;
+    }
+
+    .main-shot img { max-height: 128mm; object-fit: contain; }
+    .geo-shot img { max-height: 125mm; object-fit: contain; }
+
+    .dual-figures {
+      display: grid;
+      grid-template-columns: 1.18fr .82fr;
+      gap: 4mm;
+      align-items: start;
+    }
+
+    .dual-figures img {
+      height: 113mm;
+      object-fit: contain;
+    }
+
+    .security-layout {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 5mm;
+      align-items: start;
+    }
+
+    .security-layout figure { margin-top: 0; }
+    .security-layout figure img { max-height: 106mm; object-fit: contain; }
+
+    .compact { font-size: 8.4pt; }
+    .small { font-size: 7.8pt; }
+
+    .page-footer {
+      position: absolute;
+      right: 15mm;
+      bottom: 6.5mm;
+      left: 15mm;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 1.7mm;
+      border-top: 1px solid #dbe2e6;
+      color: #6b7780;
+      font-size: 7.4pt;
+    }
+
+    .cover .page-footer {
+      border-top-color: rgba(255,255,255,.35);
+      color: #d9ebe8;
+    }
+
+    .sources {
+      color: #56636c;
+      font-size: 7.3pt;
+    }
+
+    .sources a { color: #275d78; }
+
+    @media print {
+      body { background: #fff; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover" id="pagina-1">
+    <div>
+      <p class="eyebrow" style="color:#bceadd">Proyecto final · MongoDB</p>
+      <h1>Patrones espacio-temporales de desequilibrio de flujo en ECOBICI</h1>
+      <div class="rule"></div>
+      <p class="subtitle">Identificación de cicloestaciones, periodos y entornos cercanos que requieren mayor prioridad de monitoreo operativo.</p>
+    </div>
+
+    <div class="cover-card">
+      <p><strong>Integrante</strong><br>Fernando Ugalde Ubaldo</p>
+      <p><strong>Periodo analizado</strong><br>Enero–marzo de 2026</p>
+      <p><strong>Entorno</strong><br>AWS Academy Learner Lab · MongoDB 4.4.29</p>
+    </div>
+
+    <p class="course">Conceptos avanzados de bases de datos NoSQL · 25 de agosto de 2026</p>
+    <div class="page-footer"><span>Reporte final</span><span>1 / 6</span></div>
+  </section>
+
+  <section class="page" id="pagina-2">
+    <p class="eyebrow">Problema y datos</p>
+    <h2>Del viaje individual a una prioridad de monitoreo</h2>
+    <p class="lead">Los viajes no regresan necesariamente a su estación de origen. Por ello, una estación puede acumular más retiros que arribos —o lo contrario— en ciertos periodos. El proyecto mide ese <strong>desequilibrio de flujo observado</strong> para priorizar dónde y cuándo revisar la operación.</p>
+
+    <div class="callout">
+      <strong>Decisión apoyada.</strong> Priorizar cicloestaciones y periodos para monitoreo o revisión. El resultado no decide cuántas bicicletas mover, qué vehículo usar ni qué ruta seguir.
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <h3>Personas usuarias</h3>
+        <ul class="compact">
+          <li>Personal de monitoreo y operación de ECOBICI.</li>
+          <li>SEMOVI y planeación de movilidad.</li>
+          <li>Personas usuarias del sistema como beneficiarias indirectas.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Preguntas</h3>
+        <ol class="compact">
+          <li>¿Qué estaciones presentan desequilibrios recurrentes y cuándo?</li>
+          <li>¿Cómo cambian entre horas de mayor y menor uso y tipo de día?</li>
+          <li>¿Existen concentraciones de estaciones cercanas con el mismo patrón?</li>
+          <li>¿Qué estaciones son consistentes y cuáles cambian entre semanas?</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric"><strong>4 707 285</strong><span>viajes</span></div>
+      <div class="metric"><strong>677</strong><span>estaciones</span></div>
+      <div class="metric"><strong>3</strong><span>meses</span></div>
+      <div class="metric"><strong>12</strong><span>semanas completas</span></div>
+    </div>
+
+    <h3>Procedencia y modelo documental</h3>
+    <p>Se utilizaron tres CSV mensuales de viajes publicados por ECOBICI y el catálogo público de cicloestaciones del Portal de Datos Abiertos de la Ciudad de México. Los archivos fueron auditados mediante conteos y SHA-256; no se versionaron en Git.</p>
+
+    <div class="model">
+      <div class="model-box">
+        <strong>ecobici_viajes</strong>
+        Un documento por viaje: retiro, arribo, duración, fuente y banderas de calidad.
+      </div>
+      <div class="arrow">→</div>
+      <div class="model-box">
+        <strong>ecobici_estaciones</strong>
+        Catálogo referenciado: dirección, colonia, alcaldía, punto GeoJSON y fuente.
+      </div>
+    </div>
+
+    <p>Retiro y arribo se anidan porque pertenecen al mismo hecho; las estaciones se referencian para no duplicar ubicación y dirección millones de veces. Fechas y horas se almacenan como BSON <code>Date</code> en UTC y se interpretan en <code>America/Mexico_City</code>. Género, edad e identificador de bicicleta fueron excluidos porque no responden las preguntas.</p>
+
+    <div class="callout warning compact">
+      Se conservaron 114 viajes relacionados con el identificador no catalogado <code>1000</code>, con banderas explícitas y sin inventar una estación o coordenadas.
+    </div>
+
+    <p class="sources">Fuentes: <a href="https://ecobici.cdmx.gob.mx/datos-abiertos/">Datos abiertos de ECOBICI</a> y <a href="https://www.datos.cdmx.gob.mx/dataset/cicloestaciones-ecobici-nuevo-sistema">Cicloestaciones ECOBICI · Datos Abiertos CDMX</a>.</p>
+    <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>2 / 6</span></div>
+  </section>
+
+  <section class="page" id="pagina-3">
+    <p class="eyebrow">Implementación</p>
+    <h2>Cinco consultas responden dimensiones distintas</h2>
+    <p>La solución carga los datos por streaming y ejecuta cinco análisis reproducibles: balance por estación, comparación por día y hora, consistencia semanal, concentración geográfica y priorización integrada. Los pipelines usan los patrones practicados en el curso: <code>$match</code>, <code>$addFields</code>, <code>$group</code>, <code>$project</code>, <code>$sort</code>, <code>$dateToString</code>, <code>$sum</code> y <code>$geoNear</code>.</p>
+
+    <figure class="main-shot">
+      <img src="../evidencias/01_consulta_principal.png.jpeg" alt="Salida de la priorización ejecutiva de monitoreo">
+      <figcaption><strong>Figura 1.</strong> Se ejecutó la consulta 5 sobre 677 estaciones, doce semanas y vecindades de hasta 1 km. La estación 271-272, en Buenavista, repitió presión de entrada las doce semanas; su patrón crítico ocurrió el miércoles a las 17:00 y sus tres vecinas coincidieron. Esto demuestra que la pregunta principal produce una prioridad reproducible, no una afirmación de inventario.</figcaption>
+    </figure>
+
+    <div class="grid-2 compact">
+      <div class="card">
+        <h3>Presión recurrente de entrada</h3>
+        <p><strong>271-272 · Buenavista</strong></p>
+        <p>Balance de doce semanas: <strong>+20 038</strong>. Recurrencia y consistencia: <strong>1.0</strong>. Máximo promedio: miércoles 17:00, <strong>+128.167</strong>.</p>
+      </div>
+      <div class="card">
+        <h3>Presión recurrente de salida</h3>
+        <p><strong>208 · Polanco</strong></p>
+        <p>Balance de doce semanas: <strong>−4 376</strong>. Recurrencia y consistencia: <strong>1.0</strong>. Máximo promedio: martes 06:00, <strong>−26.538</strong>.</p>
+      </div>
+    </div>
+
+    <p class="callout compact"><strong>Lectura ejecutiva.</strong> Buenavista concentra presión de entrada y Polanco presión de salida. Estos extremos sirven para priorizar monitoreo; no prueban que una estación haya estado llena o vacía ni ordenan una redistribución.</p>
+
+    <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>3 / 6</span></div>
+  </section>
+
+  <section class="page" id="pagina-4">
+    <p class="eyebrow">Análisis especializado</p>
+    <h2>El patrón combina tiempo y proximidad</h2>
+
+    <div class="grid-2 compact">
+      <div class="card">
+        <h3>Componente temporal</h3>
+        <p>El intervalo trimestral es semiabierto: <code>[2026-01-01, 2026-04-01)</code>. En días laborables, las horas de mayor actividad fueron 18:00, 17:00 y 08:00; en fin de semana fueron 13:00, 12:00 y 14:00. Doce semanas completas permiten separar recurrencia de cambios de dirección.</p>
+      </div>
+      <div class="card">
+        <h3>Componente geoespacial</h3>
+        <p>Las 677 ubicaciones se representan como <code>Point</code> WGS84 en orden longitud–latitud. El índice <code>2dsphere</code> permite usar <code>$geoNear</code> para buscar hasta tres vecinas dentro de 1 km en el mismo día y hora.</p>
+      </div>
+    </div>
+
+    <figure class="geo-shot">
+      <img src="../evidencias/02_analisis_geoespacial.png.jpeg" alt="Salida del análisis geoespacial de estaciones cercanas">
+      <figcaption><strong>Figura 2.</strong> Se ejecutó la consulta 4 con <code>ubicacion_2dsphere</code>. El entorno anclado en 273-274, Buenavista, presentó presión de entrada el martes a las 18:00; sus tres vecinas a 73, 120 y 139 metros compartieron el sentido y el balance promedio conjunto fue +259.462. Esto demuestra una concentración territorial del patrón observado.</figcaption>
+    </figure>
+
+    <div class="grid-60-40 compact">
+      <div>
+        <h3>Integración de resultados</h3>
+        <ul>
+          <li>271-272, 266-267 y 273-274 mantuvieron presión de entrada durante las doce semanas completas.</li>
+          <li>La proximidad no se usa sola: una vecina sólo coincide si comparte el signo del balance en la combinación de día y hora del ancla.</li>
+          <li>Las semanas neutras no se interpretan como cambios; un patrón mixto exige semanas de entrada y de salida.</li>
+        </ul>
+      </div>
+      <div class="callout warning">
+        <strong>Técnica descartada.</strong><br>La búsqueda textual no responde las preguntas: los datos necesarios son identificadores, fechas, horas y coordenadas, no lenguaje libre. Incluir <code>$text</code> habría sido artificial.
+      </div>
+    </div>
+
+    <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>4 / 6</span></div>
+  </section>
+
+  <section class="page" id="pagina-5">
+    <p class="eyebrow">Índices y validación</p>
+    <h2>Los controles conservan resultados y reducen errores</h2>
+    <p class="lead">Se midieron las mismas consultas antes y después de crear dos índices secundarios, y se aplicaron validadores <code>$jsonSchema</code> con nivel <code>strict</code> y acción <code>error</code>.</p>
+
+    <div class="dual-figures">
+      <figure>
+        <img src="../evidencias/03_indices.png.jpeg" alt="Comparación de un plan antes y después del índice">
+        <figcaption><strong>Figura 3.</strong> La consulta A pasó de <code>COLLSCAN + SORT</code>, con 4 707 285 documentos examinados, a <code>IXSCAN</code> sin ordenamiento independiente y sólo 100 documentos examinados. Conservó 100 resultados y evitó examinar 4 707 185 documentos. El tiempo es evidencia secundaria porque puede variar.</figcaption>
+      </figure>
+      <figure>
+        <img src="../evidencias/04_validaciones.png.jpeg" alt="Resumen de validaciones de viajes y estaciones">
+        <figcaption><strong>Figura 4.</strong> Los validadores aceptaron dos viajes válidos y una geometría válida; rechazaron cuatro viajes y tres geometrías incompatibles. Las colecciones temporales fueron limpiadas y permanecieron 4 707 285 viajes y 677 estaciones. Esto demuestra presencia, tipos, mínimos, dominio y estructura GeoJSON.</figcaption>
+      </figure>
+    </div>
+
+    <table>
+      <thead><tr><th>Consulta medida</th><th>Antes</th><th>Después</th><th>Conclusión</th></tr></thead>
+      <tbody>
+        <tr><td>A · últimos 100 retiros de 208</td><td>4 707 285 documentos y <code>SORT</code></td><td>100 claves y 100 documentos</td><td>Usa el índice de retiros.</td></tr>
+        <tr><td>B · retiros de 208</td><td>4 707 285 documentos</td><td>29 697 claves y documentos</td><td>Reutiliza el prefijo del índice.</td></tr>
+        <tr><td>C · últimos 100 arribos de 271-272</td><td>4 707 285 documentos y <code>SORT</code></td><td>100 claves y 100 documentos</td><td>Usa el índice de arribos.</td></tr>
+        <tr><td>D · filtro amplio catalogado</td><td><code>COLLSCAN</code></td><td><code>COLLSCAN</code></td><td>Un índice dirigido no mejora todo filtro.</td></tr>
+      </tbody>
+    </table>
+
+    <p class="small">Los índices colocan igualdad por estación y catálogo antes de la fecha descendente. Añaden costo de almacenamiento y escritura; no sustituyen los recorridos completos necesarios para calcular el balance global.</p>
+
+    <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>5 / 6</span></div>
+  </section>
+
+  <section class="page" id="pagina-6">
+    <p class="eyebrow">Seguridad y cierre</p>
+    <h2>Acceso mínimo, resultados y límites</h2>
+
+    <div class="security-layout">
+      <figure>
+        <img src="../evidencias/05_seguridad.png.jpeg" alt="Rol de análisis y muestra de la vista minimizada">
+        <figcaption><strong>Figura 5.</strong> Se creó <code>ecobici_viajes_analitica</code> con <code>$project</code> y se inspeccionó <code>analista_ecobici</code>, que sólo recibe <code>find</code> sobre la vista. La muestra excluye identificador, fuente y duración. Esto demuestra una salida minimizada y una frontera de acceso diseñada.</figcaption>
+      </figure>
+
+      <div class="compact">
+        <h3>Clasificación y privilegio mínimo</h3>
+        <table>
+          <thead><tr><th>Perfil</th><th>Acceso concedido</th></tr></thead>
+          <tbody>
+            <tr><td>Análisis</td><td><code>find</code> sólo en la vista minimizada.</td></tr>
+            <tr><td>Auditoría</td><td><code>find</code> en viajes y estaciones, sin escritura.</td></tr>
+            <tr><td>Administración</td><td>Índices y <code>collMod</code>, sin <code>find</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>Los datos de origen son públicos; <code>_id</code> y <code>fuente</code> se reservan para trazabilidad. Género, edad e identificador de bicicleta no se almacenan. Contraseñas, tokens, llaves y nombres particulares de buckets no aparecen en scripts ni evidencias.</p>
+        <p class="callout warning">La instancia local no habilita autorización. Se comprobaron las definiciones de rol, pero las denegaciones permanecen como pruebas de diseño para un entorno autenticado.</p>
+      </div>
+    </div>
+
+    <div class="grid-2 compact">
+      <div class="card">
+        <h3>Resultado</h3>
+        <p>El monitoreo debe observar especialmente la presión recurrente de entrada en Buenavista y la presión de salida en Polanco. La coincidencia entre semanas, horas y estaciones cercanas evita priorizar únicamente por volumen total.</p>
+      </div>
+      <div class="card">
+        <h3>Limitación principal</h3>
+        <p>Los CSV registran viajes completados, no inventario, capacidad disponible, demanda insatisfecha, redistribuciones internas ni trayectorias GPS. Un balance no demuestra que una estación estuvo llena o vacía.</p>
+      </div>
+    </div>
+
+    <h3>Mejora posible</h3>
+    <p>Como extensión futura, se podrían capturar instantáneas periódicas del estado GBFS y, si estuvieran disponibles, movimientos operativos de balanceo. Esto permitiría contrastar el desequilibrio de viajes con disponibilidad observada sin presentar el estado actual de GBFS como historia retroactiva.</p>
+
+    <div class="callout compact">
+      <strong>Cierre.</strong> La solución integra carga reproducible, cinco consultas, análisis temporal y geoespacial, índices medidos, validación de dos colecciones y protección por vista y roles. Todas las ejecuciones finales en Learner Lab terminaron con código <strong>0</strong>.
+    </div>
+
+    <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>6 / 6</span></div>
+  </section>
+  <script>
+    var paginaVistaPrevia = new URLSearchParams(window.location.search).get("pagina");
+    if (paginaVistaPrevia) {
+      document.querySelectorAll(".page").forEach(function (pagina, indice) {
+        pagina.style.display = String(indice + 1) === paginaVistaPrevia ? "block" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
