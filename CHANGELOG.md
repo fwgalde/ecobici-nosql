@@ -19,10 +19,12 @@
 - Se implementó la transformación de fechas, identificadores, geometrías, trazabilidad y banderas de calidad.
 - Se incorporó una verificación reproducible de conteos, tipos BSON, referencias contra la instantánea auditada y minimización de datos.
 - Se documentó el traslado de los CSV mediante S3 y el orden de ejecución en Learner Lab.
+- Se ejecutó la carga en Learner Lab con MongoDB Server y MongoDB Shell 4.4.29 y `mongoimport` 100.17.0.
+- Se importaron 4 707 285 viajes y 677 estaciones sin documentos fallidos; la verificación integral terminó con código `0`.
+- Se corrigió la línea vacía final del manifiesto de hashes detectada durante la ejecución.
 
 ## Próximas fases
 
-- Ejecución y evidencia de la carga en Learner Lab.
 - Consultas y pipelines.
 - Medición e índices.
 - Validación mediante JSON Schema.
