@@ -157,6 +157,6 @@ Cada consulta comprueba primero los conteos de la carga y después valida invari
 Consultas ECOBICI completas y verificadas.
 ```
 
-La ejecución de referencia del 25 de agosto de 2026 en AWS Academy Learner Lab terminó con código `0`: coincidieron los controles de la cohorte completa, los intervalos horarios del trimestre y las doce semanas completas. Después se compactó la presentación y se añadieron las respuestas geográfica y ejecutiva; esta versión de cinco consultas debe ejecutarse nuevamente antes de elegir la evidencia final.
+La versión final de las cinco consultas se ejecutó el 25 de agosto de 2026 en AWS Academy Learner Lab y terminó con código `0`. Coincidieron los controles de la cohorte completa, los intervalos horarios del trimestre, las doce semanas completas, las 677 estaciones evaluadas y el índice geoespacial `ubicacion_2dsphere`; el ejecutor generó también la comparación temporal ampliada, los entornos geográficos y la priorización ejecutiva sin excepciones.
 
 En esta fase son esperables recorridos completos de `ecobici_viajes`; por eso cada pipeline puede tardar varios minutos. La fase siguiente medirá los pipelines de viajes con `explain("executionStats")`; el índice `ubicacion_2dsphere` se tratará por separado porque `$geoNear` lo requiere para funcionar.

@@ -35,6 +35,7 @@
 - Se añadió una priorización ejecutiva sin puntuaciones ponderadas, ordenada por recurrencia, consistencia y magnitud semanal.
 - Se integraron cinco consultas reproducibles en el ejecutor de la fase y se mantuvieron únicamente patrones presentes en los retos y ejemplos del curso.
 - Se corrigió la comprobación del índice geoespacial para consultar el catálogo de índices en MongoDB Shell 4.4.29.
+- Se ejecutó la versión final de las cinco consultas en Learner Lab; coincidieron todos los controles temporales, semanales y geoespaciales y el ejecutor terminó con código `0`.
 
 ## Próximas fases
 
