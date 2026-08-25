@@ -49,7 +49,12 @@
 - Se añadieron una geometría válida y tres inválidas en una colección temporal sin índice, de modo que los rechazos por tipo, estructura e intervalo correspondan al esquema; la colección se elimina al terminar.
 - Se documentaron WGS84, el orden longitud--latitud, las unidades, la vigencia y los límites de precisión de la fuente geográfica.
 - Se corrigió la reproducibilidad del validador geoespacial para crear y verificar de forma idempotente `ubicacion_2dsphere` después de una recarga, sin depender de la ejecución previa de las consultas.
+- Se ejecutó la validación geoespacial en Learner Lab con código `0`: una geometría válida fue aceptada, tres inválidas fueron rechazadas, se confirmó `ubicacion_2dsphere`, se eliminó la colección temporal y permanecieron 677 estaciones.
+- Se añadió una vista analítica minimizada mediante `createView` y `$project`, limitada a los extremos del viaje y las banderas de catálogo necesarias.
+- Se definieron roles de análisis, auditoría y administración con los recursos y acciones explícitos de los ejemplos 19 y 20 y del reto 10, sin crear usuarios ni contraseñas.
+- Se añadió una matriz de acceso con clasificación, privilegio mínimo y pruebas positivas y negativas de diseño, distinguiendo las definiciones inspeccionadas de las denegaciones pendientes.
+- Se incorporó un ejecutor reproducible para crear la vista, actualizar o crear los roles y comprobar cinco salidas minimizadas.
 
 ## Próximas fases
 
-- Seguridad, evidencias, reporte y exposición.
+- Evidencias, reporte y exposición.

@@ -114,7 +114,7 @@ El verificador también comprueba los conteos mensuales, las banderas de calidad
 
 La carga es repetible desde un estado conocido. Si la transformación, la importación o la verificación detectan un error, el cargador intenta eliminar los documentos ECOBICI parciales y advierte si no puede hacerlo. Un cierre abrupto del laboratorio todavía podría interrumpir esa limpieza; en cualquiera de esos casos, vuelve a ejecutar `cargar_datos.sh`, que restablecerá únicamente las dos colecciones del proyecto antes de comenzar.
 
-El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas, realizar la comparación de planes y aplicar al final los validadores; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
+El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas, realizar la comparación de planes, aplicar los validadores y ejecutar al final la configuración idempotente de la vista y los roles; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
 
 Para utilizar otra ubicación local sin mover los CSV, define una variable específica al ejecutar:
 
@@ -292,4 +292,43 @@ Validaciones JSON Schema ECOBICI completas y verificadas.
 Código final de la validación: 0
 ```
 
-La validación de viajes se ejecutó el 25 de agosto de 2026 en AWS Academy Learner Lab. La configuración comprobada fue `validationLevel: "strict"` y `validationAction: "error"`; los dos documentos válidos fueron aceptados, las cuatro inconsistencias aisladas fueron rechazadas y los dos documentos de prueba almacenados se eliminaron. La colección terminó nuevamente con 4 707 285 viajes y el ejecutor devolvió código `0`.
+La validación completa se ejecutó el 25 de agosto de 2026 en AWS Academy Learner Lab con código `0`. En `ecobici_viajes`, los dos documentos válidos fueron aceptados, las cuatro inconsistencias aisladas fueron rechazadas y la limpieza conservó 4 707 285 viajes. En `ecobici_estaciones`, una geometría válida fue aceptada, tres geometrías inválidas fueron rechazadas, se confirmó `ubicacion_2dsphere`, la colección temporal fue eliminada y permanecieron las 677 estaciones originales.
+
+## Seguridad y privacidad
+
+Esta fase aplica únicamente los patrones de los ejemplos 19 y 20 y del reto 10 de la semana 5: una vista creada con `createView` y `$project`, tres roles personalizados, inspección mediante `getRole` y una matriz de acceso. La vista `ecobici_viajes_analitica` conserva `retiro`, `arribo` y las dos banderas de pertenencia al catálogo. Excluye `_id`, `fuente`, `duracionSegundos` y las dos banderas de calidad que no participan en las preguntas del proyecto.
+
+```mermaid
+flowchart LR
+    A[Análisis] -->|find| V[(ecobici_viajes_analitica)]
+    U[Auditoría] -->|find| D[(ecobici_viajes)]
+    U -->|find| E[(ecobici_estaciones)]
+    M[Administración] -->|índices y collMod| D
+    M -->|índices y collMod| E
+```
+
+El rol `analista_ecobici` recibe sólo `find` sobre la vista. `auditor_ecobici` recibe `find` sobre las dos colecciones fuente sin escritura. `administrador_ecobici` recibe `listIndexes`, `createIndex`, `dropIndex` y `collMod` sobre esas colecciones sin recibir `find`. La clasificación, las acciones no concedidas y las pruebas positivas y negativas de diseño se encuentran en [`seguridad/matriz_acceso.md`](seguridad/matriz_acceso.md).
+
+Los datos de ECOBICI utilizados son públicos y género, edad e identificador de bicicleta ya fueron excluidos durante la carga. Aun así, la vista se describe como minimizada y no como anónima porque conserva combinaciones de estación y fecha que podrían relacionarse con información externa. Ningún script contiene usuarios, contraseñas, tokens, llaves de acceso ni nombres particulares de buckets.
+
+Ejecuta desde la raíz del clon después de las validaciones:
+
+```bash
+mkdir -p proyecto_final/ecobici/salidas
+set -o pipefail
+
+bash proyecto_final/ecobici/scripts/ejecutar_seguridad.sh 2>&1 | tee proyecto_final/ecobici/salidas/seguridad_learner_lab.txt
+
+codigoSeguridad=${PIPESTATUS[0]}
+echo "Código final de seguridad: $codigoSeguridad"
+```
+
+Una ejecución correcta muestra cinco documentos minimizados, la matriz compacta, los tres roles y termina con:
+
+```text
+Seguridad y acceso mínimo ECOBICI completos y verificados.
+Seguridad y privacidad ECOBICI completas y verificadas.
+Código final de seguridad: 0
+```
+
+La instancia local del curso no habilita autorización. Por ello, el ejecutor crea e inspecciona roles, pero no crea usuarios ni contraseñas y no presenta las pruebas negativas diseñadas como denegaciones ejecutadas. La vista tampoco sustituye las cinco consultas analíticas ni demuestra cifrado, conservación, respaldos o administración de credenciales; esos controles requieren un entorno configurado para comprobarlos.
