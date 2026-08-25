@@ -477,4 +477,4 @@ printjson(comparacionesPrioritarias);
 print("\nLectura ejecutiva: cada estación aparece una sola vez con su patrón más pronunciado y cuatro periodos comparables.");
 print("Las franjas de mayor actividad forman el pico observado y las de menor actividad su contraste; ambas se derivan de los datos.");
 print("La magnitud del balance medio direccional es el valor absoluto del balance acumulado dividido entre los días comparables; los cambios de signo se cancelan y por eso no equivale al promedio de magnitudes diarias.");
-print("Los resultados describen extremos observados en la cohorte y no inventarios de bicicletas.");
+print("Los resultados describen extremos observados en los viajes cargados y no inventarios de bicicletas.");

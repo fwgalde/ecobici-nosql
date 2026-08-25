@@ -27,7 +27,7 @@ if (
   throw new Error("La carga ECOBICI no coincide con los conteos esperados. Ejecuta primero cargar_datos.sh.");
 }
 
-print("=== Consulta 1: balance de la cohorte por estación ===");
+print("=== Consulta 1: balance del conjunto de viajes por estación ===");
 print("Cada viaje aporta un retiro y un arribo. Balance = arribos - retiros.");
 
 var pipelineRetiros = [
@@ -224,7 +224,7 @@ if (
   throw new Error("El resumen de estaciones catalogadas no coincide con el contrato auditado.");
 }
 
-print("\nControl de la cohorte:");
+print("\nControl del conjunto de viajes:");
 printjson(control);
 print("\nExtremo no catalogado conservado para control técnico:");
 printjson(filasNoCatalogadas[0]);
@@ -232,5 +232,5 @@ print("\nCinco estaciones con mayor presión neta de entrada observada:");
 printjson(estacionesEntrada.map(resumirBalance));
 print("\nCinco estaciones con mayor presión neta de salida observada:");
 printjson(estacionesSalida.map(resumirBalance));
-print("\nLectura ejecutiva: valores positivos indican más arribos y valores negativos más retiros dentro de la cohorte.");
+print("\nLectura ejecutiva: valores positivos indican más arribos y valores negativos más retiros dentro del conjunto analizado.");
 print("Estos balances priorizan monitoreo; no representan inventario, capacidad ni disponibilidad de bicicletas.");

@@ -7,9 +7,9 @@ ROOT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/../../.." && pwd)
 
 mongodb_iniciar
 
-echo "1/5 Calculando el balance de la cohorte por estación..."
+echo "1/5 Calculando el balance del conjunto de viajes por estación..."
 mongodb_ejecutar_archivo \
-  "$ROOT_DIR/proyecto_final/ecobici/consultas/01_balance_cohorte.js"
+  "$ROOT_DIR/proyecto_final/ecobici/consultas/01_balance_viajes.js"
 
 echo "2/5 Comparando patrones por día y hora local..."
 mongodb_ejecutar_archivo \

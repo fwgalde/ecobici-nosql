@@ -82,7 +82,7 @@ if (
 }
 
 print("=== Consulta 3: consistencia entre semanas completas ===");
-print("Se comparan doce intervalos semanales locales completos dentro de la cohorte observada, desde el 5 de enero hasta antes del 30 de marzo de 2026.");
+print("Se comparan doce intervalos semanales locales completos dentro del periodo observado, desde el 5 de enero hasta antes del 30 de marzo de 2026.");
 
 var pipelineRetiros = [
   {
