@@ -22,11 +22,13 @@
 - Se ejecutó la carga en Learner Lab con MongoDB Server y MongoDB Shell 4.4.29 y `mongoimport` 100.17.0.
 - Se importaron 4 707 285 viajes y 677 estaciones sin documentos fallidos; la verificación integral terminó con código `0`.
 - Se corrigió la línea vacía final del manifiesto de hashes detectada durante la ejecución.
+- Se implementaron tres consultas reproducibles para el balance de la cohorte, los patrones por día y hora local y la consistencia durante doce semanas completas.
+- Se limitaron los pipelines a operadores y patrones practicados en los ejemplos del repositorio, sin índices, validadores ni colecciones derivadas.
+- Se documentó la diferencia entre la cohorte seleccionada por mes de arribo y un registro completo de eventos del trimestre.
 
 ## Próximas fases
 
-- Consultas y pipelines.
 - Medición e índices.
 - Validación mediante JSON Schema.
-- Análisis temporal y geoespacial.
+- Medición y evidencia temporal especializada, además del análisis geoespacial.
 - Seguridad, evidencias, reporte y exposición.

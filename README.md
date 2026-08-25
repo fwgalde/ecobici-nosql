@@ -114,7 +114,7 @@ El verificador también comprueba los conteos mensuales, las banderas de calidad
 
 La carga es repetible desde un estado conocido. Si la transformación, la importación o la verificación detectan un error, el cargador intenta eliminar los documentos ECOBICI parciales y advierte si no puede hacerlo. Un cierre abrupto del laboratorio todavía podría interrumpir esa limpieza; en cualquiera de esos casos, vuelve a ejecutar `cargar_datos.sh`, que restablecerá únicamente las dos colecciones del proyecto antes de comenzar.
 
-El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible final será cargar los datos y después ejecutar los futuros scripts de validación e indexación.
+El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible final será cargar los datos, ejecutar las consultas iniciales, obtener su medición base y después aplicar los futuros scripts de indexación y validación.
 
 Para utilizar otra ubicación local sin mover los CSV, define una variable específica al ejecutar:
 
@@ -122,3 +122,37 @@ Para utilizar otra ubicación local sin mover los CSV, define una variable espec
 ECOBICI_RAW_DIR=/ruta/a/los/csv \
   bash proyecto_final/ecobici/scripts/cargar_datos.sh
 ```
+
+## Consultas reproducibles
+
+El universo principal es la cohorte de 4 707 285 viajes cuyos arribos pertenecen a los archivos de enero, febrero y marzo de 2026. La consulta de balance cuenta los dos extremos de todos esos viajes; por ello, el balance global de la cohorte debe ser cero. Los 104 viajes mayores de 24 horas permanecen incluidos y auditables, tal como se decidió durante el modelado.
+
+Las consultas horaria y semanal utilizan el momento real de cada retiro o arribo y aplican intervalos semiabiertos en la zona `America/Mexico_City`. Como los archivos se seleccionaron por mes de arribo, no contienen los retiros de viajes que terminaron en abril. En consecuencia, estos resultados describen los extremos observados dentro de la cohorte cargada y no deben presentarse como un registro completo de todos los eventos del trimestre ni como inventario de bicicletas.
+
+El identificador no catalogado `1000` se conserva en el control global, pero sólo se excluye el extremo correspondiente de los rankings operativos. El otro extremo de esos viajes sigue participando cuando pertenece a una estación catalogada. La dirección del balance se define siempre como `arribos - retiros`: un valor positivo indica presión neta de entrada observada y uno negativo indica presión neta de salida observada.
+
+| Script | Pregunta y unidad | Igualdad o rango | Ordenamiento | Arreglos | Importancia y volumen |
+|---|---|---|---|---|---|
+| `consultas/01_balance_cohorte.js` | Prioriza estaciones por balance acumulado de la cohorte completa. | No aplica un rango adicional; agrupa los dos extremos de los viajes cargados. | Magnitud, movimientos e identificador. | Combina en JavaScript dos resúmenes pequeños por estación; no consulta campos de arreglo. | Es la consulta principal de priorización y procesa 4 707 285 retiros y 4 707 285 arribos. |
+| `consultas/02_patrones_horarios.js` | Compara cada estación por día de semana y hora local, además de laborables frente a fines de semana. | `calidad.retiroEnCatalogo = true` o `calidad.arriboEnCatalogo = true`, con cada instante en `[2026-01-01, 2026-04-01)`. | Magnitud del balance medio direccional, movimientos e identificador; el resumen horario conserva orden cronológico. | Agrupa los extremos hasta obtener claves estación-día-hora y combina únicamente esos resúmenes. | Responde la parte temporal de la pregunta principal sobre millones de extremos observados. |
+| `consultas/03_consistencia_semanal.js` | Identifica estaciones con dirección recurrente o cambiante durante doce intervalos semanales completos dentro de la cohorte observada. | Bandera de catálogo y cada instante en `[2026-01-05, 2026-03-30)`. | Recurrencia, consistencia y magnitud para la dirección dominante; evidencia, menor consistencia y mayor salto para estaciones que cambian de dirección. | Cada estación produce una serie final de doce semanas; no lee arreglos almacenados. | Responde la pregunta de recurrencia para las 677 estaciones catalogadas. |
+
+Los controles esperados no fijan de antemano los rankings. La primera consulta exige 4 707 285 retiros, 4 707 285 arribos, balance global `0`, 9 414 452 extremos catalogados y balance catalogado `-38`; también comprueba los 40 retiros y 78 arribos asociados con `1000`. La segunda exige 4 707 132 retiros y 4 707 207 arribos catalogados dentro del trimestre, además de un resumen de 24 horas para cada tipo de día. La tercera exige 4 505 019 retiros, 4 504 990 arribos, 677 series de doce semanas y fechas conocidas en la primera, segunda y última semana. Los cuatro conteos temporales se contrastaron directamente contra los CSV auditados.
+
+Para esta consulta, el pico observado se define de forma reproducible como las cinco horas con más movimientos promedio por día y se contrasta con las cinco de menor actividad, por separado para laborables y fines de semana. No se impone una franja externa. La magnitud del balance medio direccional se calcula como el valor absoluto del balance acumulado para una combinación estación-día-hora dividido entre la cantidad de días comparables; los cambios de signo se cancelan, por lo que no equivale al promedio de magnitudes diarias. En el análisis semanal, la recurrencia es la proporción de las doce semanas que repite la dirección dominante y la consistencia compara esa dirección sólo entre semanas con balance distinto de cero. Una estación se considera cambiante únicamente si presenta semanas de entrada y de salida; esos casos se priorizan por la cantidad de semanas con evidencia antes de comparar consistencia y salto máximo. El salto máximo consecutivo no se interpreta como toda la variabilidad.
+
+La comparación semanal reutiliza la lógica de variaciones consecutivas practicada en el curso. Los pipelines se limitan a los patrones presentes en los ejemplos del repositorio: `$match`, `$group`, `$dateToString`, `$sum` y `$sort`, además de los intervalos temporales y cálculos pequeños en JavaScript empleados en los ejemplos 14, 15 y 16 de la semana 4. No crean índices, colecciones derivadas ni resúmenes permanentes.
+
+Después de cargar y verificar los datos, ejecuta desde la raíz del clon:
+
+```bash
+bash proyecto_final/ecobici/scripts/ejecutar_consultas.sh
+```
+
+Cada consulta comprueba primero los conteos de la carga y después valida invariantes propios. Una ejecución correcta termina con:
+
+```text
+Consultas ECOBICI completas y verificadas.
+```
+
+En esta fase son esperables recorridos completos de `ecobici_viajes`; por eso cada pipeline puede tardar varios minutos. La fase siguiente medirá estos patrones con `explain("executionStats")` antes de proponer índices.
