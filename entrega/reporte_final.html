@@ -393,6 +393,84 @@
       font-size: 7.7pt;
     }
 
+    .pipeline-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5mm;
+      margin: 2mm 0;
+    }
+
+    .pipeline-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5mm;
+      margin: 2mm 0;
+    }
+
+    .pipeline-review {
+      padding: 2.4mm 2.7mm;
+      border: 1px solid var(--borde);
+      border-radius: 2mm;
+      background: #f8fafb;
+      font-size: 7.25pt;
+      line-height: 1.27;
+    }
+
+    .pipeline-review h3 {
+      margin: 0 0 1mm;
+      font-size: 9.2pt;
+    }
+
+    .pipeline-review p { margin-bottom: 1.2mm; }
+
+    .pipeline-stages {
+      margin-bottom: 1.4mm;
+      padding: 1.4mm 1.7mm;
+      border-left: 1mm solid var(--verde);
+      background: var(--verde-claro);
+      color: #174c43;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 6.9pt;
+      line-height: 1.35;
+    }
+
+    .course-pattern {
+      margin-bottom: 0 !important;
+      color: #4d5c65;
+      font-size: 6.9pt;
+    }
+
+    .index-choice {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+      margin: 1.8mm 0;
+    }
+
+    .index-choice div {
+      padding: 2mm 2.5mm;
+      border: 1px solid var(--borde);
+      border-radius: 2mm;
+      background: var(--azul-claro);
+      font-size: 7.3pt;
+    }
+
+    .index-pattern {
+      display: block;
+      margin: 1mm 0;
+      color: #174c43;
+      font-size: 6.8pt;
+    }
+
+    .index-table {
+      margin: 1.5mm 0;
+      font-size: 6.9pt;
+      line-height: 1.2;
+    }
+
+    .index-table th,
+    .index-table td { padding: 1.15mm 1.3mm; }
+
     figure {
       margin: 3mm 0 2.5mm;
       break-inside: avoid;
@@ -414,8 +492,8 @@
     }
 
     .main-shot img { max-height: 128mm; object-fit: contain; }
-    .technical-main-shot img { height: 84mm; object-fit: contain; }
-    .geo-shot img { max-height: 125mm; object-fit: contain; }
+    .technical-main-shot img { height: 70mm; object-fit: contain; }
+    .geo-shot img { height: 91mm; object-fit: contain; }
 
     .dual-figures {
       display: grid;
@@ -425,7 +503,7 @@
     }
 
     .dual-figures img {
-      height: 113mm;
+      height: 82mm;
       object-fit: contain;
     }
 
@@ -583,34 +661,60 @@
 
     <p class="compact">El código <code>1000</code> aparece en los CSV de viajes, pero no entre las 677 estaciones de la instantánea geográfica. No se declara inválido ni se crea una estación ficticia: se conserva el identificador original y se marca <code>retiroEnCatalogo: false</code> o <code>arriboEnCatalogo: false</code>. El extremo sin ubicación no entra en rankings geográficos; el otro extremo sí participa cuando su identificador existe en el catálogo.</p>
 
-    <h3>Cinco consultas, cinco dimensiones</h3>
-    <p class="compact">Los documentos alimentan balance por estación, comparación por día y hora, consistencia semanal, concentración geográfica y priorización integrada. Los pipelines usan <code>$match</code>, <code>$addFields</code>, <code>$group</code>, <code>$project</code>, <code>$sort</code>, <code>$dateToString</code>, <code>$sum</code> y <code>$geoNear</code>, siguiendo los patrones del curso.</p>
+    <h3>Revisión técnica · consultas 1 a 3</h3>
+    <p class="small">MongoDB reduce primero los 4.7 millones de viajes; JavaScript combina únicamente los resúmenes de retiros y arribos por estación, periodo o fecha.</p>
+
+    <div class="pipeline-grid-3">
+      <div class="pipeline-review">
+        <h3>1 · Balance por estación</h3>
+        <div class="pipeline-stages">retiros y arribos:<br>$group → $project → $sort</div>
+        <p><strong>Decisión.</strong> Se usan dos pipelines espejo porque cada viaje aporta un retiro y un arribo que pueden pertenecer a estaciones distintas. Después se unen sus conteos y se calcula <code>arribos − retiros</code>.</p>
+        <p><strong>Permitió observar.</strong> Cinco presiones de entrada y cinco de salida, además del control global de un retiro y un arribo por viaje.</p>
+        <p class="course-pattern"><strong>Curso:</strong> agrupación con <code>$group/$sum</code> y orden reproducible del Reto 06.</p>
+      </div>
+      <div class="pipeline-review">
+        <h3>2 · Día y hora local</h3>
+        <div class="pipeline-stages">$match → $addFields → $group → $project → $sort</div>
+        <p><strong>Decisión.</strong> <code>$match</code> fija catálogo e intervalo; <code>$dateToString</code> deriva día y hora en <code>America/Mexico_City</code>; <code>$group</code> usa la unidad estación-día-hora.</p>
+        <p><strong>Permitió observar.</strong> Horas de mayor y menor actividad en laborables y fines de semana y el momento crítico de cada estación.</p>
+        <p class="course-pattern"><strong>Curso:</strong> derivar el periodo antes de agrupar, como en el Reto 08.</p>
+      </div>
+      <div class="pipeline-review">
+        <h3>3 · Consistencia semanal</h3>
+        <div class="pipeline-stages">$match → $addFields → $group → $project → $sort</div>
+        <p><strong>Decisión.</strong> Se resume por estación y fecha local; después se completan doce semanas fijas y se separan semanas de entrada, salida y neutras.</p>
+        <p><strong>Permitió observar.</strong> Recurrencia sobre doce semanas, consistencia sólo entre semanas no neutras y cambios consecutivos de dirección.</p>
+        <p class="course-pattern"><strong>Curso:</strong> periodos del Reto 08 y variaciones consecutivas del Ejemplo 16.</p>
+      </div>
+    </div>
 
     <figure class="main-shot technical-main-shot">
       <img src="../evidencias/01_consulta_principal.png.jpeg" alt="Salida de la priorización ejecutiva de monitoreo">
       <figcaption><strong>Figura 1.</strong> Se ejecutó la consulta 5 sobre 677 estaciones, doce semanas y vecindades de hasta 1 km. La estación 271-272, en Buenavista, repitió presión de entrada las doce semanas; su patrón crítico ocurrió el miércoles a las 17:00 y sus tres vecinas coincidieron. Esto demuestra que la pregunta principal produce una prioridad reproducible, no una afirmación de inventario.</figcaption>
     </figure>
 
-    <div class="result-ribbon">
-      <div><strong>Entrada · 271-272, Buenavista.</strong> Balance semanal +20 038; recurrencia y consistencia 1.0; máximo promedio miércoles 17:00, +128.167.</div>
-      <div><strong>Salida · 208, Polanco.</strong> Balance semanal −4 376; recurrencia y consistencia 1.0; máximo promedio martes 06:00, −26.538.</div>
-    </div>
-
     <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>3 / 6</span></div>
   </section>
 
   <section class="page" id="pagina-4">
     <p class="eyebrow">Análisis especializado</p>
-    <h2>El patrón combina tiempo y proximidad</h2>
+    <h2>Consultas 4 y 5: proximidad y decisión</h2>
+    <p class="lead">Las últimas consultas no sustituyen los resúmenes anteriores: relacionan el patrón temporal con la ubicación y producen una salida única de monitoreo.</p>
 
-    <div class="grid-2 compact">
-      <div class="card">
-        <h3>Componente temporal</h3>
-        <p>El intervalo trimestral es semiabierto: <code>[2026-01-01, 2026-04-01)</code>. En días laborables, las horas de mayor actividad fueron 18:00, 17:00 y 08:00; en fin de semana fueron 13:00, 12:00 y 14:00. Doce semanas completas permiten separar recurrencia de cambios de dirección.</p>
+    <div class="pipeline-grid-2">
+      <div class="pipeline-review">
+        <h3>4 · Concentración geográfica</h3>
+        <div class="pipeline-stages">temporal × 2: $match → $addFields → $group → $project → $sort<br>espacial: 2dsphere → $geoNear → $project</div>
+        <p><strong>Decisión.</strong> Primero se calcula el balance estación-día-hora. Para cinco anclas por dirección, <code>$geoNear</code> recupera las tres estaciones más próximas dentro de 1 km; una vecina coincide sólo si presenta el mismo signo en el mismo día y hora.</p>
+        <p><strong>Permitió observar.</strong> Entornos donde la presión no aparece aislada. En 273-274, martes 18:00, tres vecinas a 73, 120 y 139 m compartieron presión de entrada.</p>
+        <p class="course-pattern"><strong>Curso:</strong> transformación e índice <code>2dsphere</code> del Reto 05 y proximidad del Ejemplo 11.</p>
       </div>
-      <div class="card">
-        <h3>Componente geoespacial</h3>
-        <p>Las 677 ubicaciones se representan como <code>Point</code> WGS84 en orden longitud–latitud. El índice <code>2dsphere</code> permite usar <code>$geoNear</code> para buscar hasta tres vecinas dentro de 1 km en el mismo día y hora.</p>
+      <div class="pipeline-review">
+        <h3>5 · Priorización ejecutiva</h3>
+        <div class="pipeline-stages">horario × 2 + semanal × 2<br>recurrencia → consistencia → magnitud → contexto $geoNear</div>
+        <p><strong>Decisión.</strong> La consulta es autocontenida: vuelve a resumir retiros y arribos sin depender de colecciones intermedias. Ordena por criterios observables y no usa una puntuación con pesos inventados.</p>
+        <p><strong>Permitió observar.</strong> Cinco prioridades por dirección con estación, repetición semanal, patrón crítico y cantidad de vecinas coincidentes en una salida compacta.</p>
+        <p class="course-pattern"><strong>Curso:</strong> reutiliza el pipeline temporal del Reto 08 y la proximidad del Ejemplo 11; no introduce una técnica ajena al módulo.</p>
       </div>
     </div>
 
@@ -619,27 +723,37 @@
       <figcaption><strong>Figura 2.</strong> Se ejecutó la consulta 4 con <code>ubicacion_2dsphere</code>. El entorno anclado en 273-274, Buenavista, presentó presión de entrada el martes a las 18:00; sus tres vecinas a 73, 120 y 139 metros compartieron el sentido y el balance promedio conjunto fue +259.462. Esto demuestra una concentración territorial del patrón observado.</figcaption>
     </figure>
 
-    <div class="grid-60-40 compact">
-      <div>
-        <h3>Integración de resultados</h3>
-        <ul>
-          <li>271-272, 266-267 y 273-274 mantuvieron presión de entrada durante las doce semanas completas.</li>
-          <li>La proximidad no se usa sola: una vecina sólo coincide si comparte el signo del balance en la combinación de día y hora del ancla.</li>
-          <li>Las semanas neutras no se interpretan como cambios; un patrón mixto exige semanas de entrada y de salida.</li>
-        </ul>
-      </div>
-      <div class="callout warning">
-        <strong>Técnica descartada.</strong><br>La búsqueda textual no responde las preguntas: los datos necesarios son identificadores, fechas, horas y coordenadas, no lenguaje libre. Incluir <code>$text</code> habría sido artificial.
-      </div>
+    <div class="result-ribbon">
+      <div><strong>Entrada · 271-272, Buenavista.</strong> Balance semanal +20 038; recurrencia y consistencia 1.0; patrón crítico miércoles 17:00, +128.167.</div>
+      <div><strong>Salida · 208, Polanco.</strong> Balance semanal −4 376; recurrencia y consistencia 1.0; patrón crítico martes 06:00, −26.538.</div>
     </div>
+
+    <p class="callout warning small"><strong>Alcance de la decisión.</strong> La vecindad se calcula después del orden por recurrencia, consistencia y magnitud: informa el contexto, pero no recibe un peso arbitrario. Los resultados describen viajes observados, no disponibilidad. La búsqueda textual se descartó porque no existen campos de lenguaje libre relevantes.</p>
 
     <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>4 / 6</span></div>
   </section>
 
   <section class="page" id="pagina-5">
     <p class="eyebrow">Índices y validación</p>
-    <h2>Los controles conservan resultados y reducen errores</h2>
-    <p class="lead">Se midieron las mismas consultas antes y después de crear dos índices secundarios, y se aplicaron validadores <code>$jsonSchema</code> con nivel <code>strict</code> y acción <code>error</code>.</p>
+    <h2>Dos índices medidos, no una mejora asumida</h2>
+    <p class="lead">Se ejecutaron las mismas cuatro consultas con <code>explain("executionStats")</code> antes y después de crear dos índices secundarios; después se aplicaron validadores <code>$jsonSchema</code> con nivel <code>strict</code> y acción <code>error</code>.</p>
+
+    <div class="index-choice">
+      <div><strong>Índice de retiros</strong><code class="index-pattern">retiro.estacionId: 1 → calidad.retiroEnCatalogo: 1 → retiro.ocurrioEn: −1</code>Las dos igualdades forman primero el bloque de una estación catalogada; la fecha descendente atiende el intervalo y entrega los eventos recientes sin <code>SORT</code> separado.</div>
+      <div><strong>Índice de arribos</strong><code class="index-pattern">arribo.estacionId: 1 → calidad.arriboEnCatalogo: 1 → arribo.ocurrioEn: −1</code>Se requiere otro índice porque <code>retiro.*</code> y <code>arribo.*</code> son rutas diferentes. Mantiene el mismo orden de igualdad, igualdad y fecha descendente.</div>
+    </div>
+
+    <table class="index-table">
+      <thead><tr><th>Consulta y patrón</th><th>Plan anterior</th><th>Plan posterior</th><th>Documentos examinados</th><th>Decisión</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A</strong> · últimos 100 retiros de 208</td><td><code>COLLSCAN + SORT</code></td><td><code>IXSCAN + FETCH</code>, sin <code>SORT</code></td><td>4 707 285 → 100</td><td><strong>Sí mejoró.</strong> Atiende igualdad, catálogo, intervalo y orden.</td></tr>
+        <tr><td><strong>B</strong> · todos los retiros de 208</td><td><code>COLLSCAN</code></td><td><code>IXSCAN + FETCH</code></td><td>4 707 285 → 29 697</td><td><strong>Sí mejoró.</strong> Reutiliza el prefijo <code>retiro.estacionId</code>.</td></tr>
+        <tr><td><strong>C</strong> · últimos 100 arribos de 271-272</td><td><code>COLLSCAN + SORT</code></td><td><code>IXSCAN + FETCH</code>, sin <code>SORT</code></td><td>4 707 285 → 100</td><td><strong>Sí mejoró.</strong> Usa el índice equivalente de arribos.</td></tr>
+        <tr><td><strong>D</strong> · retiros catalogados del trimestre</td><td><code>COLLSCAN</code></td><td><code>COLLSCAN</code></td><td>4 707 285 → 4 707 285</td><td><strong>No mejoró.</strong> Omite el primer campo y devuelve casi toda la colección.</td></tr>
+      </tbody>
+    </table>
+
+    <p class="technical-note small"><strong>Patrón del curso.</strong> La medición reproduce el Reto 03 y los Ejemplos 05–06: conservar la consulta, comparar antes/después, colocar igualdades antes del campo de ordenamiento, comprobar el prefijo y reconocer que un índice no beneficia cualquier filtro.</p>
 
     <div class="dual-figures">
       <figure>
@@ -652,17 +766,7 @@
       </figure>
     </div>
 
-    <table>
-      <thead><tr><th>Consulta medida</th><th>Antes</th><th>Después</th><th>Conclusión</th></tr></thead>
-      <tbody>
-        <tr><td>A · últimos 100 retiros de 208</td><td>4 707 285 documentos y <code>SORT</code></td><td>100 claves y 100 documentos</td><td>Usa el índice de retiros.</td></tr>
-        <tr><td>B · retiros de 208</td><td>4 707 285 documentos</td><td>29 697 claves y documentos</td><td>Reutiliza el prefijo del índice.</td></tr>
-        <tr><td>C · últimos 100 arribos de 271-272</td><td>4 707 285 documentos y <code>SORT</code></td><td>100 claves y 100 documentos</td><td>Usa el índice de arribos.</td></tr>
-        <tr><td>D · filtro amplio catalogado</td><td><code>COLLSCAN</code></td><td><code>COLLSCAN</code></td><td>Un índice dirigido no mejora todo filtro.</td></tr>
-      </tbody>
-    </table>
-
-    <p class="small">Los índices colocan igualdad por estación y catálogo antes de la fecha descendente. Añaden costo de almacenamiento y escritura; no sustituyen los recorridos completos necesarios para calcular el balance global.</p>
+    <p class="small"><strong>Costos y límites.</strong> Los índices ocupan almacenamiento y aumentan el trabajo de escritura. No sustituyen los recorridos completos requeridos por los balances globales. El índice <code>ubicacion_2dsphere</code> tiene otra finalidad: es requisito funcional de <code>$geoNear</code>, no parte de esta comparación. Los tiempos variaron, por lo que la evidencia principal son las etapas y los documentos examinados.</p>
 
     <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>5 / 6</span></div>
   </section>

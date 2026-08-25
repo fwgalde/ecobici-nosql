@@ -60,6 +60,7 @@
 - Se añadió al README el orden completo de ejecución y la distribución del reporte para una exposición máxima de cinco minutos.
 - Se amplió la revisión técnica del reporte con diagramas de referencia manual, conversión temporal a BSON `Date` y tratamiento auditable de los 114 viajes relacionados con `1000`.
 - Se simplificó la terminología del conjunto analizado y se renombró la primera consulta para que su propósito resulte inmediato.
+- Se documentaron en el reporte las etapas, decisiones, observaciones y patrones del curso de las cinco consultas, además del criterio de diseño y la comparación completa de los índices.
 
 ## Próximas fases
 
