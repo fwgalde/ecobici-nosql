@@ -36,10 +36,11 @@
 - Se integraron cinco consultas reproducibles en el ejecutor de la fase y se mantuvieron únicamente patrones presentes en los retos y ejemplos del curso.
 - Se corrigió la comprobación del índice geoespacial para consultar el catálogo de índices en MongoDB Shell 4.4.29.
 - Se ejecutó la versión final de las cinco consultas en Learner Lab; coincidieron todos los controles temporales, semanales y geoespaciales y el ejecutor terminó con código `0`.
+- Se implementó una comparación reproducible de cuatro planes antes y después de crear dos índices compuestos dirigidos por estación, catálogo y fecha.
+- Se incorporaron controles de `COLLSCAN`, `IXSCAN`, `SORT`, resultados conservados, prefijos y documentos examinados siguiendo los patrones de la semana 2.
 
 ## Próximas fases
 
-- Medición e índices.
 - Validación mediante JSON Schema.
 - Medición y evidencia temporal especializada, además del análisis geoespacial.
 - Seguridad, evidencias, reporte y exposición.

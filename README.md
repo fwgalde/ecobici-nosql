@@ -114,7 +114,7 @@ El verificador también comprueba los conteos mensuales, las banderas de calidad
 
 La carga es repetible desde un estado conocido. Si la transformación, la importación o la verificación detectan un error, el cargador intenta eliminar los documentos ECOBICI parciales y advierte si no puede hacerlo. Un cierre abrupto del laboratorio todavía podría interrumpir esa limpieza; en cualquiera de esos casos, vuelve a ejecutar `cargar_datos.sh`, que restablecerá únicamente las dos colecciones del proyecto antes de comenzar.
 
-El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos y ejecutar las cinco consultas; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere`, que `$geoNear` necesita para funcionar. La fase de rendimiento medirá por separado los pipelines sobre `ecobici_viajes` antes de añadirles índices de optimización.
+El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas y realizar después la comparación de planes; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
 
 Para utilizar otra ubicación local sin mover los CSV, define una variable específica al ejecutar:
 
@@ -159,4 +159,66 @@ Consultas ECOBICI completas y verificadas.
 
 La versión final de las cinco consultas se ejecutó el 25 de agosto de 2026 en AWS Academy Learner Lab y terminó con código `0`. Coincidieron los controles de la cohorte completa, los intervalos horarios del trimestre, las doce semanas completas, las 677 estaciones evaluadas y el índice geoespacial `ubicacion_2dsphere`; el ejecutor generó también la comparación temporal ampliada, los entornos geográficos y la priorización ejecutiva sin excepciones.
 
-En esta fase son esperables recorridos completos de `ecobici_viajes`; por eso cada pipeline puede tardar varios minutos. La fase siguiente medirá los pipelines de viajes con `explain("executionStats")`; el índice `ubicacion_2dsphere` se tratará por separado porque `$geoNear` lo requiere para funcionar.
+En esta fase son esperables recorridos completos de `ecobici_viajes`; por eso cada pipeline puede tardar varios minutos. El índice `ubicacion_2dsphere` se trata por separado porque `$geoNear` lo requiere para funcionar.
+
+## Medición e índices
+
+La estrategia reproduce el procedimiento de los ejemplos 05 y 06 y del reto 03: conserva cada consulta, obtiene su plan con `explain("executionStats")`, crea como máximo dos índices secundarios y repite exactamente la misma medición. El análisis se concentra en `COLLSCAN`, `IXSCAN`, la presencia de `SORT`, `nReturned`, `totalKeysExamined` y `totalDocsExamined`. También registra `executionTimeMillis`, pero no lo interpreta como una mejora general porque puede variar entre ejecuciones.
+
+Las consultas A y C recuperan como máximo cien eventos recientes de las principales estaciones detectadas en la fase analítica. La consulta B comprueba el uso del prefijo del índice de retiros. La consulta D conserva el filtro amplio inicial del análisis horario para observar sus límites: como abarca casi toda la colección y omite el primer campo de los índices, su plan no se presupone de antemano.
+
+```mermaid
+flowchart LR
+    A[Consulta A<br/>retiros 208 por fecha] --> IR[Índice de retiros]
+    B[Consulta B<br/>retiros 208] --> IR
+    C[Consulta C<br/>arribos 271-272 por fecha] --> IA[Índice de arribos]
+    D[Consulta D<br/>filtro amplio] --> L[Límite observado]
+```
+
+| Consulta | Igualdades | Rango y orden | Propósito de la medición |
+|---|---|---|---|
+| A | `retiro.estacionId = 208` y `calidad.retiroEnCatalogo = true` | Trimestre y `retiro.ocurrioEn` descendente, con límite de 100 | Comprobar acceso dirigido y ausencia de `SORT` independiente. |
+| B | `retiro.estacionId = 208` | No aplica | Comprobar el prefijo del índice de retiros. |
+| C | `arribo.estacionId = 271-272` y `calidad.arriboEnCatalogo = true` | Trimestre y `arribo.ocurrioEn` descendente, con límite de 100 | Comprobar acceso dirigido y ausencia de `SORT` independiente. |
+| D | `calidad.retiroEnCatalogo = true` | Trimestre, sin ordenamiento | Observar el comportamiento de un filtro que cubre 4 707 132 extremos. |
+
+Los patrones creados son:
+
+```javascript
+{
+  "retiro.estacionId": 1,
+  "calidad.retiroEnCatalogo": 1,
+  "retiro.ocurrioEn": -1
+}
+```
+
+```javascript
+{
+  "arribo.estacionId": 1,
+  "calidad.arriboEnCatalogo": 1,
+  "arribo.ocurrioEn": -1
+}
+```
+
+Los campos de igualdad aparecen antes del campo temporal. Esto permite recorrer por fecha dentro de una estación y una condición de catálogo conocidas; colocar `retiro.estacionId` primero también permite que la consulta B reutilice ese prefijo. Los índices no se presentan como una optimización universal: consumen almacenamiento y memoria, añaden trabajo a las escrituras y no evitan los recorridos completos que requiere el balance global.
+
+El archivo `indices/01_comparar_planes.js` elimina únicamente los índices secundarios de `ecobici_viajes`, verifica que la medición inicial use sólo `_id_`, crea los dos índices y comprueba que las consultas A, B y C los utilicen sin cambiar la cantidad de resultados. No elimina `ubicacion_2dsphere` porque ese índice pertenece a `ecobici_estaciones`. La medición mediante `find().explain()` describe el acceso asociado con los filtros seleccionados y no se presenta como el tiempo total de los pipelines Q1–Q5.
+
+Ejecuta desde la raíz del clon:
+
+```bash
+mkdir -p proyecto_final/ecobici/salidas
+set -o pipefail
+
+bash proyecto_final/ecobici/scripts/ejecutar_indices.sh 2>&1 | tee proyecto_final/ecobici/salidas/indices_learner_lab.txt
+
+codigoIndices=${PIPESTATUS[0]}
+echo "Código final de la medición: $codigoIndices"
+```
+
+Una ejecución correcta termina con:
+
+```text
+Medición e índices ECOBICI completos y verificados.
+Código final de la medición: 0
+```
