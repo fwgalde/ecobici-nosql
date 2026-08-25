@@ -114,7 +114,7 @@ El verificador también comprueba los conteos mensuales, las banderas de calidad
 
 La carga es repetible desde un estado conocido. Si la transformación, la importación o la verificación detectan un error, el cargador intenta eliminar los documentos ECOBICI parciales y advierte si no puede hacerlo. Un cierre abrupto del laboratorio todavía podría interrumpir esa limpieza; en cualquiera de esos casos, vuelve a ejecutar `cargar_datos.sh`, que restablecerá únicamente las dos colecciones del proyecto antes de comenzar.
 
-El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas y realizar después la comparación de planes; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
+El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas, realizar la comparación de planes y aplicar al final el validador; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
 
 Para utilizar otra ubicación local sin mover los CSV, define una variable específica al ejecutar:
 
@@ -182,6 +182,15 @@ flowchart LR
 | C | `arribo.estacionId = 271-272` y `calidad.arriboEnCatalogo = true` | Trimestre y `arribo.ocurrioEn` descendente, con límite de 100 | Comprobar acceso dirigido y ausencia de `SORT` independiente. |
 | D | `calidad.retiroEnCatalogo = true` | Trimestre, sin ordenamiento | Observar el comportamiento de un filtro que cubre 4 707 132 extremos. |
 
+La comparación se ejecutó en AWS Academy Learner Lab sobre los 4 707 285 viajes cargados y conservó la cantidad de resultados de las cuatro consultas. Los tiempos se registran como evidencia de esa ejecución, pero la comparación principal se basa en las etapas del plan y en las claves y documentos examinados.
+
+| Consulta | Plan inicial | Plan con los dos índices | Resultado observado |
+|---|---|---|---|
+| A | `SORT` y `COLLSCAN`; 4 707 285 documentos; 0 claves; 3 035 ms | `LIMIT`, `FETCH` e `IXSCAN`; 100 documentos; 100 claves; 21 ms | Usó `retiro_estacion_catalogo_fecha_desc`, evitó examinar 4 707 185 documentos y ya no requirió `SORT`. |
+| B | `COLLSCAN`; 4 707 285 documentos; 0 claves; 1 918 ms | `FETCH` e `IXSCAN`; 29 697 documentos; 29 697 claves; 59 ms | Usó el prefijo de `retiro_estacion_catalogo_fecha_desc` y evitó examinar 4 677 588 documentos. |
+| C | `SORT` y `COLLSCAN`; 4 707 285 documentos; 0 claves; 2 181 ms | `LIMIT`, `FETCH` e `IXSCAN`; 100 documentos; 100 claves; 25 ms | Usó `arribo_estacion_catalogo_fecha_desc`, evitó examinar 4 707 185 documentos y ya no requirió `SORT`. |
+| D | `COLLSCAN`; 4 707 285 documentos; 0 claves; 3 852 ms | `COLLSCAN`; 4 707 285 documentos; 0 claves; 3 898 ms | Conservó el mismo plan porque devolvió 4 707 132 documentos; los índices dirigidos por estación no ayudan a este filtro amplio. |
+
 Los patrones creados son:
 
 ```javascript
@@ -221,4 +230,53 @@ Una ejecución correcta termina con:
 ```text
 Medición e índices ECOBICI completos y verificados.
 Código final de la medición: 0
+```
+
+## Validación
+
+La validación se concentra en `ecobici_viajes`, la colección principal indicada en el modelo. El archivo `validaciones/01_validar_viajes.js` sigue los ejemplos 07 y 08 y el reto 04 de la semana 2: aplica `$jsonSchema` mediante `collMod`, usa nivel `strict` y acción `error`, y relaciona cada inserción aceptada o rechazada con una regla concreta.
+
+| Campo o ruta | Tipo BSON | Presencia | Restricción aplicada |
+|---|---|---|---|
+| Documento raíz | `object` | Obligatorio | Debe incluir `_id`, `retiro`, `arribo`, `duracionSegundos`, `fuente` y `calidad`. |
+| `_id` | `string` | Obligatorio | Conserva identificadores textuales. |
+| `retiro` y `arribo` | `object` | Obligatorio | Cada objeto exige `estacionId` y `ocurrioEn`. |
+| `retiro.estacionId` y `arribo.estacionId` | `string` | Obligatorio | Conservan ceros y códigos compuestos. |
+| `retiro.ocurrioEn` y `arribo.ocurrioEn` | `date` | Obligatorio | Los instantes deben almacenarse como fechas BSON. |
+| `duracionSegundos` | `int` | Obligatorio | `minimum: 1`; una duración nula o negativa no representa un viaje completado. |
+| `fuente.archivo` | `string` | Obligatorio | Sólo admite `2026-01.csv`, `2026-02.csv` o `2026-03.csv`. |
+| `fuente.filaCsv` | `int` | Obligatorio | `minimum: 2`, porque la primera línea corresponde al encabezado. |
+| Campos de `calidad` | `bool` | Obligatorio | Las cuatro banderas deben estar presentes y ser booleanas. |
+
+```mermaid
+flowchart LR
+    A[collMod sobre ecobici_viajes] --> B[JSON Schema<br/>strict y error]
+    B --> C[2 documentos válidos<br/>deben aceptarse]
+    B --> D[4 documentos inválidos<br/>deben rechazarse]
+    C --> E[Limpieza de IDs de prueba]
+    D --> E
+    E --> F[4 707 285 viajes originales]
+```
+
+Los dos casos válidos comprueban un viaje ordinario y otro mayor de 24 horas con un retiro en `1000`. El segundo confirma que las anomalías auditadas se conservan cuando mantienen la estructura requerida. Los cuatro casos inválidos aíslan la ausencia de `retiro`, una fecha guardada como cadena, una duración igual a cero y un archivo fuera del dominio permitido.
+
+El validador protege presencia, tipos, mínimos, documentos anidados y el dominio de la fuente. No demuestra que una estación referenciada exista ni puede comprobar por sí solo que la duración sea igual a la diferencia entre los instantes o que las banderas derivadas sean coherentes. Esas relaciones permanecen en `scripts/verificar_carga.js`, que ya recorrió la colección completa sin encontrar documentos incompatibles con estas reglas.
+
+Ejecuta desde la raíz del clon después de la medición de índices:
+
+```bash
+mkdir -p proyecto_final/ecobici/salidas
+set -o pipefail
+
+bash proyecto_final/ecobici/scripts/ejecutar_validaciones.sh 2>&1 | tee proyecto_final/ecobici/salidas/validaciones_learner_lab.txt
+
+codigoValidaciones=${PIPESTATUS[0]}
+echo "Código final de la validación: $codigoValidaciones"
+```
+
+Una ejecución correcta acepta dos documentos, rechaza cuatro, elimina los identificadores reservados y termina con:
+
+```text
+Validación JSON Schema ECOBICI completa y verificada.
+Código final de la validación: 0
 ```

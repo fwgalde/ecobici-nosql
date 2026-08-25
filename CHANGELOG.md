@@ -38,9 +38,14 @@
 - Se ejecutó la versión final de las cinco consultas en Learner Lab; coincidieron todos los controles temporales, semanales y geoespaciales y el ejecutor terminó con código `0`.
 - Se implementó una comparación reproducible de cuatro planes antes y después de crear dos índices compuestos dirigidos por estación, catálogo y fecha.
 - Se incorporaron controles de `COLLSCAN`, `IXSCAN`, `SORT`, resultados conservados, prefijos y documentos examinados siguiendo los patrones de la semana 2.
+- Se ejecutó la comparación final en Learner Lab sobre 4 707 285 viajes y las cuatro consultas conservaron su cantidad de resultados.
+- Las consultas A y C sustituyeron `COLLSCAN` y `SORT` por `IXSCAN` y examinaron sólo 100 documentos; la consulta B reutilizó el prefijo del índice de retiros y examinó 29 697 documentos.
+- La consulta D permaneció en `COLLSCAN` porque devolvió 4 707 132 documentos, dejando documentado que los dos índices dirigidos por estación no mejoran un filtro que abarca prácticamente toda la colección.
+- Se implementó un validador `$jsonSchema` para `ecobici_viajes` mediante `collMod`, con nivel `strict` y acción `error`.
+- Se protegieron los campos obligatorios, tipos BSON, documentos anidados, mínimos y dominio de archivos definidos en el modelo documental.
+- Se añadieron dos casos válidos y cuatro inválidos reproducibles, además de la limpieza de sus identificadores y la comprobación de que permanezcan los 4 707 285 viajes originales.
 
 ## Próximas fases
 
-- Validación mediante JSON Schema.
 - Medición y evidencia temporal especializada, además del análisis geoespacial.
 - Seguridad, evidencias, reporte y exposición.
