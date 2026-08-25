@@ -126,11 +126,16 @@ exigir(opciones.validator && opciones.validator.$jsonSchema, "No se encontró el
 exigir(opciones.validationLevel === "strict", "El nivel de validación de estaciones no es strict.");
 exigir(opciones.validationAction === "error", "La acción de validación de estaciones no es error.");
 
+estaciones.createIndex(
+  { ubicacion: "2dsphere" },
+  { name: "ubicacion_2dsphere" }
+);
+
 var indices = estaciones.getIndexes();
 var indiceGeoespacial = indices.filter(function (indice) {
   return indice.name === "ubicacion_2dsphere" && indice.key.ubicacion === "2dsphere";
 });
-exigir(indiceGeoespacial.length === 1, "Ejecuta primero las consultas para crear y verificar ubicacion_2dsphere.");
+exigir(indiceGeoespacial.length === 1, "No se pudo crear y verificar ubicacion_2dsphere.");
 
 curso[nombreColeccionPruebas].drop();
 var creacionPruebas = curso.createCollection(nombreColeccionPruebas, {

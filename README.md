@@ -248,7 +248,7 @@ La primera validación se concentra en `ecobici_viajes`, la colección principal
 | `fuente.filaCsv` | `int` | Obligatorio | `minimum: 2`, porque la primera línea corresponde al encabezado. |
 | Campos de `calidad` | `bool` | Obligatorio | Las cuatro banderas deben estar presentes y ser booleanas. |
 
-La validación geoespacial extiende las mismas reglas a `ecobici_estaciones`, como solicita la guía de la semana 3 cuando la geometría ya es estable. Exige los campos del catálogo, los documentos anidados `direccion`, `ubicacion` y `fuente`, el tipo constante `Point`, al menos dos coordenadas numéricas y el intervalo general `[-180, 180]`. La transformación conserva las reglas específicas de orden y estructura: exactamente dos valores, longitud en `[-180, 180]` y latitud en `[-90, 90]`.
+La validación geoespacial extiende las mismas reglas a `ecobici_estaciones`, como solicita la guía de la semana 3 cuando la geometría ya es estable. Exige los campos del catálogo, los documentos anidados `direccion`, `ubicacion` y `fuente`, el tipo constante `Point`, al menos dos coordenadas numéricas y el intervalo general `[-180, 180]`. La transformación conserva las reglas específicas de orden y estructura: exactamente dos valores, longitud en `[-180, 180]` y latitud en `[-90, 90]`. El archivo `validaciones/02_validar_estaciones.js` crea de forma idempotente el mismo índice `ubicacion_2dsphere` utilizado por las consultas y después comprueba su definición; por ello, la validación no depende de que la consulta geoespacial se haya ejecutado desde la carga más reciente.
 
 | Prueba geográfica | Resultado esperado | Regla aislada |
 |---|---|---|

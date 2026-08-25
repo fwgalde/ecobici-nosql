@@ -48,6 +48,7 @@
 - Se extendió `$jsonSchema` a `ecobici_estaciones` para proteger los campos del catálogo y la estructura GeoJSON estable sin sustituir las comprobaciones específicas de la transformación.
 - Se añadieron una geometría válida y tres inválidas en una colección temporal sin índice, de modo que los rechazos por tipo, estructura e intervalo correspondan al esquema; la colección se elimina al terminar.
 - Se documentaron WGS84, el orden longitud--latitud, las unidades, la vigencia y los límites de precisión de la fuente geográfica.
+- Se corrigió la reproducibilidad del validador geoespacial para crear y verificar de forma idempotente `ubicacion_2dsphere` después de una recarga, sin depender de la ejecución previa de las consultas.
 
 ## Próximas fases
 
