@@ -254,6 +254,145 @@
       text-align: center;
     }
 
+    .reference-diagram {
+      display: grid;
+      grid-template-columns: 1.08fr 34mm .92fr;
+      gap: 3mm;
+      align-items: stretch;
+      margin: 2.5mm 0 2mm;
+    }
+
+    .diagram-node {
+      padding: 3mm 3.5mm;
+      border: 1.2px solid var(--verde);
+      border-radius: 2mm;
+      background: var(--verde-claro);
+    }
+
+    .diagram-node.station-node {
+      border-color: #6f91a4;
+      background: var(--azul-claro);
+    }
+
+    .node-title {
+      display: block;
+      margin-bottom: 1.5mm;
+      color: var(--azul);
+      font-size: 9.6pt;
+    }
+
+    .field-group {
+      margin-top: 1.5mm;
+      padding: 1.5mm 2mm;
+      border-left: 1mm solid var(--verde);
+      background: rgba(255,255,255,.72);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 7.6pt;
+      line-height: 1.35;
+    }
+
+    .reference-links {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 7mm;
+      color: var(--verde);
+      font-size: 7.2pt;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .reference-links span {
+      display: block;
+      padding-bottom: 1mm;
+      border-bottom: 1px solid var(--verde);
+    }
+
+    .time-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7mm;
+      margin: 2.5mm 0 2mm;
+    }
+
+    .time-step {
+      position: relative;
+      min-height: 27mm;
+      padding: 2.5mm;
+      border: 1px solid var(--borde);
+      border-radius: 2mm;
+      background: #f8fafb;
+      font-size: 7.5pt;
+    }
+
+    .time-step:not(:last-child)::after {
+      position: absolute;
+      top: 10mm;
+      right: -6mm;
+      color: var(--verde);
+      content: "→";
+      font-size: 14pt;
+      font-weight: 700;
+    }
+
+    .time-step strong {
+      display: block;
+      margin-bottom: 1.2mm;
+      color: var(--azul);
+      font-size: 8.3pt;
+    }
+
+    .quality-diagram {
+      display: grid;
+      grid-template-columns: 1fr .8fr 1fr 1.2fr;
+      gap: 2.5mm;
+      align-items: stretch;
+      margin: 2mm 0;
+    }
+
+    .quality-case {
+      padding: 2.2mm;
+      border: 1px solid #dfb39f;
+      border-radius: 2mm;
+      background: #fbefe9;
+      text-align: center;
+    }
+
+    .quality-case strong {
+      display: block;
+      color: var(--naranja);
+      font-size: 12pt;
+      line-height: 1.05;
+    }
+
+    .quality-total {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+    }
+
+    .quality-total strong { color: var(--verde); }
+
+    .technical-note {
+      padding: 2.2mm 3mm;
+      border: 1px solid var(--borde);
+      border-radius: 2mm;
+      background: #f8fafb;
+    }
+
+    .result-ribbon {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+      margin-top: 2mm;
+    }
+
+    .result-ribbon div {
+      padding: 2mm 2.5mm;
+      border-left: 1mm solid var(--verde);
+      background: var(--verde-claro);
+      font-size: 7.7pt;
+    }
+
     figure {
       margin: 3mm 0 2.5mm;
       break-inside: avoid;
@@ -275,6 +414,7 @@
     }
 
     .main-shot img { max-height: 128mm; object-fit: contain; }
+    .technical-main-shot img { height: 84mm; object-fit: contain; }
     .geo-shot img { max-height: 125mm; object-fit: contain; }
 
     .dual-figures {
@@ -389,54 +529,72 @@
     </div>
 
     <h3>Procedencia y modelo documental</h3>
-    <p>Se utilizaron tres CSV mensuales de viajes publicados por ECOBICI y el catálogo público de cicloestaciones del Portal de Datos Abiertos de la Ciudad de México. Los archivos fueron auditados mediante conteos y SHA-256; no se versionaron en Git.</p>
+    <p>Se utilizaron tres CSV mensuales de viajes publicados por ECOBICI y el catálogo público de cicloestaciones del Portal de Datos Abiertos de la Ciudad de México. Los cuatro archivos se comprobaron mediante conteos y SHA-256 y no se versionaron en Git.</p>
 
-    <div class="model">
-      <div class="model-box">
-        <strong>ecobici_viajes</strong>
-        Un documento por viaje: retiro, arribo, duración, fuente y banderas de calidad.
+    <div class="reference-diagram" aria-label="Diagrama de referencia manual entre viajes y estaciones">
+      <div class="diagram-node">
+        <strong class="node-title">ecobici_viajes · _id “2026-01:0000044”</strong>
+        <div class="field-group"><strong>retiro</strong><br>estacionId: “087”<br>ocurrioEn: BSON Date</div>
+        <div class="field-group"><strong>arribo</strong><br>estacionId: “099”<br>ocurrioEn: BSON Date</div>
+        <div class="small">duracionSegundos: 264 · fuente · calidad</div>
       </div>
-      <div class="arrow">→</div>
-      <div class="model-box">
-        <strong>ecobici_estaciones</strong>
-        Catálogo referenciado: dirección, colonia, alcaldía, punto GeoJSON y fuente.
+      <div class="reference-links">
+        <span>“087” → _id “087”</span>
+        <span>“099” → _id “099”</span>
+      </div>
+      <div class="diagram-node station-node">
+        <strong class="node-title">ecobici_estaciones</strong>
+        <div class="field-group"><strong>_id: “087”</strong><br>Gante / V. Carranza<br>Point [−99.139705, 19.432024]</div>
+        <div class="field-group"><strong>_id: “099”</strong><br>dirección · colonia<br>alcaldía · Point</div>
       </div>
     </div>
 
-    <p>Retiro y arribo se anidan porque pertenecen al mismo hecho; las estaciones se referencian para no duplicar ubicación y dirección millones de veces. Fechas y horas se almacenan como BSON <code>Date</code> en UTC y se interpretan en <code>America/Mexico_City</code>. Género, edad e identificador de bicicleta fueron excluidos porque no responden las preguntas.</p>
-
-    <div class="callout warning compact">
-      Se conservaron 114 viajes relacionados con el identificador no catalogado <code>1000</code>, con banderas explícitas y sin inventar una estación o coordenadas.
+    <div class="grid-2 compact">
+      <div class="technical-note"><strong>Anidamiento.</strong> <code>retiro</code> y <code>arribo</code> son subdocumentos del viaje porque cada uno necesita conservar juntos estación y momento, y ninguno tiene significado independiente de ese viaje.</div>
+      <div class="technical-note"><strong>Referencia manual.</strong> Cada <code>estacionId</code> coincide con el <code>_id</code> del catálogo. MongoDB no impone una llave foránea: el cargador comprueba la existencia y guarda <code>retiroEnCatalogo</code> y <code>arriboEnCatalogo</code>.</div>
     </div>
+
+    <p class="compact">El diseño evita repetir calle, colonia, alcaldía y coordenadas en los dos extremos de 4 707 285 viajes: aproximadamente 9.4 millones de apariciones potenciales. Esos atributos se almacenan una sola vez por estación. Los identificadores se conservan como cadenas para no perder ceros iniciales ni códigos compuestos; género, edad e identificador de bicicleta se excluyeron porque no responden las preguntas.</p>
 
     <p class="sources">Fuentes: <a href="https://ecobici.cdmx.gob.mx/datos-abiertos/">Datos abiertos de ECOBICI</a> y <a href="https://www.datos.cdmx.gob.mx/dataset/cicloestaciones-ecobici-nuevo-sistema">Cicloestaciones ECOBICI · Datos Abiertos CDMX</a>.</p>
     <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>2 / 6</span></div>
   </section>
 
   <section class="page" id="pagina-3">
-    <p class="eyebrow">Implementación</p>
-    <h2>Cinco consultas responden dimensiones distintas</h2>
-    <p>La solución carga los datos por streaming y ejecuta cinco análisis reproducibles: balance por estación, comparación por día y hora, consistencia semanal, concentración geográfica y priorización integrada. Los pipelines usan los patrones practicados en el curso: <code>$match</code>, <code>$addFields</code>, <code>$group</code>, <code>$project</code>, <code>$sort</code>, <code>$dateToString</code>, <code>$sum</code> y <code>$geoNear</code>.</p>
+    <p class="eyebrow">Implementación y calidad</p>
+    <h2>Del CSV local al BSON verificable</h2>
 
-    <figure class="main-shot">
+    <div class="time-flow" aria-label="Diagrama de conversión de una fecha local a BSON Date y su interpretación">
+      <div class="time-step"><strong>1 · CSV de origen</strong><code>01/01/2026</code><br><code>00:06:57</code><br>Hora publicada de retiro.</div>
+      <div class="time-step"><strong>2 · Transformación</strong>Se interpreta en Ciudad de México y, para esta cohorte UTC−06:00, se agregan seis horas.</div>
+      <div class="time-step"><strong>3 · Extended JSON</strong><code>{"$date":<br>"2026-01-01T06:06:57Z"}</code><br><code>Z</code> indica UTC.</div>
+      <div class="time-step"><strong>4 · Consulta local</strong><code>mongoimport</code> crea un BSON <code>Date</code>; <code>$dateToString</code> con <code>America/Mexico_City</code> recupera las 00:06:57.</div>
+    </div>
+
+    <p class="compact"><strong>Por qué no se guardó como texto.</strong> JSON ordinario no posee un tipo fecha; <code>$date</code> es la representación Extended JSON que permite a <code>mongoimport</code> crear el tipo BSON nativo. Así MongoDB puede ordenar, filtrar intervalos, restar retiro y arribo, validar el tipo e interpretar hora, día y semana en una zona explícita. En el ejemplo, el arribo ocurrió a las 00:11:21 locales y la diferencia almacenada y verificada fue de 264 segundos.</p>
+
+    <h3>Referencia no catalogada <code>1000</code>: conservar sin inventar</h3>
+    <div class="quality-diagram" aria-label="Diagrama de viajes y extremos relacionados con el identificador 1000">
+      <div class="quality-case"><strong>36</strong>sólo retiro<br><code>1000 → otra</code></div>
+      <div class="quality-case"><strong>4</strong>ambos extremos<br><code>1000 → 1000</code></div>
+      <div class="quality-case"><strong>74</strong>sólo arribo<br><code>otra → 1000</code></div>
+      <div class="quality-case quality-total"><strong>114 viajes</strong>118 extremos: 40 retiros + 78 arribos</div>
+    </div>
+
+    <p class="compact">El código <code>1000</code> aparece en los CSV de viajes, pero no entre las 677 estaciones de la instantánea geográfica. No se declara inválido ni se crea una estación ficticia: se conserva el identificador original y se marca <code>retiroEnCatalogo: false</code> o <code>arriboEnCatalogo: false</code>. El extremo sin ubicación no entra en rankings geográficos; el otro extremo sí participa cuando su identificador existe en el catálogo.</p>
+
+    <h3>Cinco consultas, cinco dimensiones</h3>
+    <p class="compact">Los documentos alimentan balance por estación, comparación por día y hora, consistencia semanal, concentración geográfica y priorización integrada. Los pipelines usan <code>$match</code>, <code>$addFields</code>, <code>$group</code>, <code>$project</code>, <code>$sort</code>, <code>$dateToString</code>, <code>$sum</code> y <code>$geoNear</code>, siguiendo los patrones del curso.</p>
+
+    <figure class="main-shot technical-main-shot">
       <img src="../evidencias/01_consulta_principal.png.jpeg" alt="Salida de la priorización ejecutiva de monitoreo">
       <figcaption><strong>Figura 1.</strong> Se ejecutó la consulta 5 sobre 677 estaciones, doce semanas y vecindades de hasta 1 km. La estación 271-272, en Buenavista, repitió presión de entrada las doce semanas; su patrón crítico ocurrió el miércoles a las 17:00 y sus tres vecinas coincidieron. Esto demuestra que la pregunta principal produce una prioridad reproducible, no una afirmación de inventario.</figcaption>
     </figure>
 
-    <div class="grid-2 compact">
-      <div class="card">
-        <h3>Presión recurrente de entrada</h3>
-        <p><strong>271-272 · Buenavista</strong></p>
-        <p>Balance de doce semanas: <strong>+20 038</strong>. Recurrencia y consistencia: <strong>1.0</strong>. Máximo promedio: miércoles 17:00, <strong>+128.167</strong>.</p>
-      </div>
-      <div class="card">
-        <h3>Presión recurrente de salida</h3>
-        <p><strong>208 · Polanco</strong></p>
-        <p>Balance de doce semanas: <strong>−4 376</strong>. Recurrencia y consistencia: <strong>1.0</strong>. Máximo promedio: martes 06:00, <strong>−26.538</strong>.</p>
-      </div>
+    <div class="result-ribbon">
+      <div><strong>Entrada · 271-272, Buenavista.</strong> Balance semanal +20 038; recurrencia y consistencia 1.0; máximo promedio miércoles 17:00, +128.167.</div>
+      <div><strong>Salida · 208, Polanco.</strong> Balance semanal −4 376; recurrencia y consistencia 1.0; máximo promedio martes 06:00, −26.538.</div>
     </div>
-
-    <p class="callout compact"><strong>Lectura ejecutiva.</strong> Buenavista concentra presión de entrada y Polanco presión de salida. Estos extremos sirven para priorizar monitoreo; no prueban que una estación haya estado llena o vacía ni ordenan una redistribución.</p>
 
     <div class="page-footer"><span>Fernando Ugalde Ubaldo · Proyecto final</span><span>3 / 6</span></div>
   </section>

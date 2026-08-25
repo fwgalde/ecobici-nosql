@@ -58,6 +58,7 @@
 - Se reunieron cinco capturas legibles de la consulta principal, el análisis geoespacial, los índices, las validaciones y la salida protegida.
 - Se generó un reporte final de seis páginas con portada, integración de las semanas 1 a 5, cinco pies de figura, resultados, límites y una mejora posible.
 - Se añadió al README el orden completo de ejecución y la distribución del reporte para una exposición máxima de cinco minutos.
+- Se amplió la revisión técnica del reporte con diagramas de referencia manual, conversión temporal a BSON `Date` y tratamiento auditable de los 114 viajes relacionados con `1000`.
 
 ## Próximas fases
 
