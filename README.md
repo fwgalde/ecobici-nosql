@@ -114,7 +114,7 @@ El verificador también comprueba los conteos mensuales, las banderas de calidad
 
 La carga es repetible desde un estado conocido. Si la transformación, la importación o la verificación detectan un error, el cargador intenta eliminar los documentos ECOBICI parciales y advierte si no puede hacerlo. Un cierre abrupto del laboratorio todavía podría interrumpir esa limpieza; en cualquiera de esos casos, vuelve a ejecutar `cargar_datos.sh`, que restablecerá únicamente las dos colecciones del proyecto antes de comenzar.
 
-El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas, realizar la comparación de planes y aplicar al final el validador; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
+El restablecimiento elimina también los índices secundarios y validadores que se añadan en fases posteriores. Por ello, el orden reproducible será cargar los datos, ejecutar las cinco consultas, realizar la comparación de planes y aplicar al final los validadores; las dos consultas geográficas crearán únicamente `ubicacion_2dsphere` en `ecobici_estaciones`, mientras que la medición de rendimiento restablece y crea sólo los índices secundarios documentados de `ecobici_viajes`.
 
 Para utilizar otra ubicación local sin mover los CSV, define una variable específica al ejecutar:
 
@@ -234,7 +234,7 @@ Código final de la medición: 0
 
 ## Validación
 
-La validación se concentra en `ecobici_viajes`, la colección principal indicada en el modelo. El archivo `validaciones/01_validar_viajes.js` sigue los ejemplos 07 y 08 y el reto 04 de la semana 2: aplica `$jsonSchema` mediante `collMod`, usa nivel `strict` y acción `error`, y relaciona cada inserción aceptada o rechazada con una regla concreta.
+La primera validación se concentra en `ecobici_viajes`, la colección principal indicada en el modelo. El archivo `validaciones/01_validar_viajes.js` sigue los ejemplos 07 y 08 y el reto 04 de la semana 2: aplica `$jsonSchema` mediante `collMod`, usa nivel `strict` y acción `error`, y relaciona cada inserción aceptada o rechazada con una regla concreta.
 
 | Campo o ruta | Tipo BSON | Presencia | Restricción aplicada |
 |---|---|---|---|
@@ -248,19 +248,28 @@ La validación se concentra en `ecobici_viajes`, la colección principal indicad
 | `fuente.filaCsv` | `int` | Obligatorio | `minimum: 2`, porque la primera línea corresponde al encabezado. |
 | Campos de `calidad` | `bool` | Obligatorio | Las cuatro banderas deben estar presentes y ser booleanas. |
 
+La validación geoespacial extiende las mismas reglas a `ecobici_estaciones`, como solicita la guía de la semana 3 cuando la geometría ya es estable. Exige los campos del catálogo, los documentos anidados `direccion`, `ubicacion` y `fuente`, el tipo constante `Point`, al menos dos coordenadas numéricas y el intervalo general `[-180, 180]`. La transformación conserva las reglas específicas de orden y estructura: exactamente dos valores, longitud en `[-180, 180]` y latitud en `[-90, 90]`.
+
+| Prueba geográfica | Resultado esperado | Regla aislada |
+|---|---|---|
+| Punto público de prueba | Aceptado | `Point` con dos componentes numéricos dentro del intervalo. |
+| `LineString` con los mismos componentes | Rechazado | `ubicacion.type` sólo admite `Point`. |
+| `Point` con una sola coordenada | Rechazado | `coordinates` exige `minItems: 2`. |
+| `Point` con longitud `200` | Rechazado | Los componentes tienen `maximum: 180`. |
+
 ```mermaid
 flowchart LR
-    A[collMod sobre ecobici_viajes] --> B[JSON Schema<br/>strict y error]
-    B --> C[2 documentos válidos<br/>deben aceptarse]
-    B --> D[4 documentos inválidos<br/>deben rechazarse]
-    C --> E[Limpieza de IDs de prueba]
-    D --> E
-    E --> F[4 707 285 viajes originales]
+    A[ejecutar_validaciones.sh] --> V[ecobici_viajes]
+    A --> G[ecobici_estaciones]
+    V --> V1[2 válidos y 4 inválidos]
+    G --> G1[1 geometría válida y 3 inválidas]
+    V1 --> R1[4 707 285 viajes]
+    G1 --> R2[677 estaciones e índice 2dsphere]
 ```
 
 Los dos casos válidos comprueban un viaje ordinario y otro mayor de 24 horas con un retiro en `1000`. El segundo confirma que las anomalías auditadas se conservan cuando mantienen la estructura requerida. Los cuatro casos inválidos aíslan la ausencia de `retiro`, una fecha guardada como cadena, una duración igual a cero y un archivo fuera del dominio permitido.
 
-El validador protege presencia, tipos, mínimos, documentos anidados y el dominio de la fuente. No demuestra que una estación referenciada exista ni puede comprobar por sí solo que la duración sea igual a la diferencia entre los instantes o que las banderas derivadas sean coherentes. Esas relaciones permanecen en `scripts/verificar_carga.js`, que ya recorrió la colección completa sin encontrar documentos incompatibles con estas reglas.
+Los validadores protegen presencia, tipos, mínimos, documentos anidados, el dominio de la fuente mensual y la estructura geográfica estable. No demuestran que una estación referenciada exista ni pueden comprobar por sí solos que la duración sea igual a la diferencia entre los instantes o que las banderas derivadas sean coherentes. Tampoco demuestran la exactitud o vigencia de una coordenada. Esas relaciones permanecen en `scripts/verificar_carga.js` y `scripts/transformar_datos.py`, que ya recorrieron la carga completa sin encontrar documentos incompatibles con estas reglas.
 
 Ejecuta desde la raíz del clon después de la medición de índices:
 
@@ -274,9 +283,13 @@ codigoValidaciones=${PIPESTATUS[0]}
 echo "Código final de la validación: $codigoValidaciones"
 ```
 
-Una ejecución correcta acepta dos documentos, rechaza cuatro, elimina los identificadores reservados y termina con:
+Una ejecución correcta acepta dos viajes, rechaza cuatro viajes inválidos, acepta una geometría, rechaza tres geometrías inválidas, elimina los datos temporales y termina con:
 
 ```text
 Validación JSON Schema ECOBICI completa y verificada.
+Validación geoespacial ECOBICI completa y verificada.
+Validaciones JSON Schema ECOBICI completas y verificadas.
 Código final de la validación: 0
 ```
+
+La validación de viajes se ejecutó el 25 de agosto de 2026 en AWS Academy Learner Lab. La configuración comprobada fue `validationLevel: "strict"` y `validationAction: "error"`; los dos documentos válidos fueron aceptados, las cuatro inconsistencias aisladas fueron rechazadas y los dos documentos de prueba almacenados se eliminaron. La colección terminó nuevamente con 4 707 285 viajes y el ejecutor devolvió código `0`.

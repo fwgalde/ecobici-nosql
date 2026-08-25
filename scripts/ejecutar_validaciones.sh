@@ -7,8 +7,12 @@ ROOT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/../../.." && pwd)
 
 mongodb_iniciar
 
-echo "Aplicando y probando el validador de la colección principal..."
+echo "1/2 Aplicando y probando el validador de la colección principal..."
 mongodb_ejecutar_archivo \
   "$ROOT_DIR/proyecto_final/ecobici/validaciones/01_validar_viajes.js"
 
-echo "Validación JSON Schema ECOBICI completa y verificada."
+echo "2/2 Aplicando y probando el validador geoespacial..."
+mongodb_ejecutar_archivo \
+  "$ROOT_DIR/proyecto_final/ecobici/validaciones/02_validar_estaciones.js"
+
+echo "Validaciones JSON Schema ECOBICI completas y verificadas."

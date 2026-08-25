@@ -22,6 +22,8 @@ Los tres archivos de viajes contienen 4 707 285 registros, comparten el mismo en
 
 El catálogo utiliza codificación Windows-1252, contiene 677 filas útiles y 312 filas completamente vacías al final. Conserva 12 identificadores compuestos, como `237-238`, y posee coordenadas válidas para sus 677 registros. Los identificadores `021` y `022` comparten coordenadas, pero representan códigos diferentes y no se deduplicarán. El identificador `1000` aparece en 114 viajes y 118 extremos, pero no existe en el catálogo; se conservará como referencia no catalogada, sin inventar una estación ni coordenadas.
 
+Para las operaciones geoespaciales, las coordenadas públicas del catálogo se representan como puntos GeoJSON en WGS84, en grados y con orden `[longitud, latitud]`. `$geoNear` devuelve las distancias calculadas en metros cuando se usa `spherical: true`. La fuente no publica una precisión instrumental para cada punto, por lo que la geometría se interpreta como la ubicación de referencia publicada para la estación y no como una medición de trayectos, accesibilidad o inventario. La instantánea geográfica informa actualización del 17 de octubre de 2024 y no demuestra por sí sola el estado operativo de una estación durante 2026.
+
 ## Modelo documental
 
 La colección principal representa un viaje completado. Un documento mantiene juntos el retiro y el arribo porque ambos describen el mismo hecho y permiten calcular su duración. Las fechas y horas se interpretan en la zona `America/Mexico_City`, se almacenan como BSON `Date` en UTC y deberán convertirse nuevamente a la zona local cuando se agrupen por hora, día o semana.
@@ -187,3 +189,4 @@ No se utilizará una colección nativa de series de tiempo porque el proyecto de
 
 `duracionSegundos` se calculará exclusivamente durante la carga y se comprobará contra los dos instantes. El validador posterior no rechazará un viaje sólo por superar 24 horas ni por cruzar el límite mensual: conservará el documento y sus banderas. Los 114 viajes relacionados con `1000` y los 118 extremos sin geometría se contabilizarán por separado cuando se construya la evidencia geoespacial.
 
+El esquema geoespacial exige `Point`, un arreglo con al menos dos componentes numéricos y el intervalo general `[-180, 180]`. La transformación conserva la comprobación más precisa que no se expresa con los patrones de esquema utilizados en el curso: exactamente dos componentes, longitud dentro de `[-180, 180]` y latitud dentro de `[-90, 90]`.

@@ -44,8 +44,11 @@
 - Se implementó un validador `$jsonSchema` para `ecobici_viajes` mediante `collMod`, con nivel `strict` y acción `error`.
 - Se protegieron los campos obligatorios, tipos BSON, documentos anidados, mínimos y dominio de archivos definidos en el modelo documental.
 - Se añadieron dos casos válidos y cuatro inválidos reproducibles, además de la limpieza de sus identificadores y la comprobación de que permanezcan los 4 707 285 viajes originales.
+- Se ejecutó la validación final en Learner Lab con código `0`: los dos casos válidos fueron aceptados, los cuatro inválidos fueron rechazados y la limpieza conservó exactamente 4 707 285 viajes.
+- Se extendió `$jsonSchema` a `ecobici_estaciones` para proteger los campos del catálogo y la estructura GeoJSON estable sin sustituir las comprobaciones específicas de la transformación.
+- Se añadieron una geometría válida y tres inválidas en una colección temporal sin índice, de modo que los rechazos por tipo, estructura e intervalo correspondan al esquema; la colección se elimina al terminar.
+- Se documentaron WGS84, el orden longitud--latitud, las unidades, la vigencia y los límites de precisión de la fuente geográfica.
 
 ## Próximas fases
 
-- Medición y evidencia temporal especializada, además del análisis geoespacial.
 - Seguridad, evidencias, reporte y exposición.
