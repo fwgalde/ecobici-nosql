@@ -1,0 +1,7 @@
+# Los datos originales y derivados se obtienen durante la ejecución.
+datos/raw/
+datos/preparados/
+
+# Resultados locales reproducibles que no forman parte de la entrega.
+salidas/
+
