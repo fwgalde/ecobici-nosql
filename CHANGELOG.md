@@ -30,6 +30,10 @@
 - Se redujo la salida a rankings ejecutivos: cinco estaciones por sentido en el balance, cinco patrones horarios únicos con contrastes de tres horas y cinco estaciones por categoría semanal.
 - Se reservó JavaScript para combinar resultados agregados, completar los doce intervalos conocidos y calcular cambios consecutivos, de acuerdo con los ejemplos temporales del curso.
 - Se corrigió la interpretación de los empates semanales: seis semanas de entrada y seis de salida forman un patrón mixto, no una dirección dominante.
+- Se amplió la comparación horaria para mostrar los periodos laborables y de fin de semana de mayor y menor actividad para cada estación prioritaria.
+- Se añadió una consulta geoespacial basada en `2dsphere` y `$geoNear` que contrasta las tres estaciones más cercanas dentro de 1 km en el mismo día y hora del patrón crítico.
+- Se añadió una priorización ejecutiva sin puntuaciones ponderadas, ordenada por recurrencia, consistencia y magnitud semanal.
+- Se integraron cinco consultas reproducibles en el ejecutor de la fase y se mantuvieron únicamente patrones presentes en los retos y ejemplos del curso.
 
 ## Próximas fases
 

@@ -330,34 +330,133 @@ var horasLaborablesMenorActividad = seleccionarHoras("laborable", false);
 var horasFinSemanaMayorActividad = seleccionarHoras("fin_semana", true);
 var horasFinSemanaMenorActividad = seleccionarHoras("fin_semana", false);
 
-function resumirPatron(fila) {
+function extraerHoras(filas) {
+  return filas.map(function (fila) {
+    return fila.horaLocal;
+  });
+}
+
+function construirMapaHoras(filas) {
+  var mapa = {};
+  filas.forEach(function (fila) {
+    mapa[fila.horaLocal] = true;
+  });
+  return mapa;
+}
+
+function crearAcumuladoPeriodo() {
   return {
-    estacionId: fila.estacionId,
-    alcaldia: fila.alcaldia,
-    colonia: fila.colonia,
-    dia: fila.dia,
-    horaLocal: fila.horaLocal,
-    balancePromedio: fila.balancePromedio,
-    movimientosPromedio: fila.movimientosPromedio
+    retiros: 0,
+    arribos: 0
   };
 }
 
-function resumirHora(fila) {
+var franjasComparadas = {
+  laborable: {
+    mayorActividad: extraerHoras(horasLaborablesMayorActividad),
+    menorActividad: extraerHoras(horasLaborablesMenorActividad)
+  },
+  finSemana: {
+    mayorActividad: extraerHoras(horasFinSemanaMayorActividad),
+    menorActividad: extraerHoras(horasFinSemanaMenorActividad)
+  }
+};
+
+var mapasHoras = {
+  laborableMayor: construirMapaHoras(horasLaborablesMayorActividad),
+  laborableMenor: construirMapaHoras(horasLaborablesMenorActividad),
+  finSemanaMayor: construirMapaHoras(horasFinSemanaMayorActividad),
+  finSemanaMenor: construirMapaHoras(horasFinSemanaMenorActividad)
+};
+
+var comparacionPorEstacion = {};
+patronesPrioritarios.forEach(function (patron) {
+  comparacionPorEstacion[patron.estacionId] = {
+    estacionId: patron.estacionId,
+    alcaldia: patron.alcaldia,
+    colonia: patron.colonia,
+    patronMasPronunciado: {
+      dia: patron.dia,
+      horaLocal: patron.horaLocal,
+      balancePromedio: patron.balancePromedio,
+      movimientosPromedio: patron.movimientosPromedio
+    },
+    laborableMayor: crearAcumuladoPeriodo(),
+    laborableMenor: crearAcumuladoPeriodo(),
+    finSemanaMayor: crearAcumuladoPeriodo(),
+    finSemanaMenor: crearAcumuladoPeriodo()
+  };
+});
+
+Object.keys(filasPorClave).forEach(function (clave) {
+  var fila = filasPorClave[clave];
+  var comparacion = comparacionPorEstacion[fila.estacionId];
+  var tipoDia;
+  var horaLocal;
+  var prefijo;
+
+  if (!comparacion) {
+    return;
+  }
+
+  tipoDia = fila.diaSemana === "1" || fila.diaSemana === "7" ? "finSemana" : "laborable";
+  horaLocal = fila.hora + ":00";
+  prefijo = tipoDia === "laborable" ? "laborable" : "finSemana";
+
+  if (mapasHoras[prefijo + "Mayor"][horaLocal]) {
+    comparacion[prefijo + "Mayor"].retiros += fila.retiros;
+    comparacion[prefijo + "Mayor"].arribos += fila.arribos;
+  }
+  if (mapasHoras[prefijo + "Menor"][horaLocal]) {
+    comparacion[prefijo + "Menor"].retiros += fila.retiros;
+    comparacion[prefijo + "Menor"].arribos += fila.arribos;
+  }
+});
+
+function resumirPeriodo(acumulado, dias) {
   return {
-    tipoDia: fila.tipoDia,
-    horaLocal: fila.horaLocal,
-    retirosPromedioPorDia: fila.retirosPromedioPorDia,
-    arribosPromedioPorDia: fila.arribosPromedioPorDia,
-    balancePromedioPorDia: fila.balancePromedioPorDia,
-    movimientosPromedioPorDia: fila.movimientosPromedioPorDia
+    balancePromedioPorDia: redondear((acumulado.arribos - acumulado.retiros) / dias, 3),
+    movimientosPromedioPorDia: redondear((acumulado.arribos + acumulado.retiros) / dias, 3)
   };
 }
+
+var comparacionesPrioritarias = patronesPrioritarios.map(function (patron) {
+  var comparacion = comparacionPorEstacion[patron.estacionId];
+  return {
+    estacionId: comparacion.estacionId,
+    alcaldia: comparacion.alcaldia,
+    colonia: comparacion.colonia,
+    patronMasPronunciado: comparacion.patronMasPronunciado,
+    laborableMayorActividad: resumirPeriodo(comparacion.laborableMayor, 64),
+    laborableMenorActividad: resumirPeriodo(comparacion.laborableMenor, 64),
+    finSemanaMayorActividad: resumirPeriodo(comparacion.finSemanaMayor, 26),
+    finSemanaMenorActividad: resumirPeriodo(comparacion.finSemanaMenor, 26)
+  };
+});
+
+comparacionesPrioritarias.forEach(function (comparacion) {
+  [
+    comparacion.laborableMayorActividad,
+    comparacion.laborableMenorActividad,
+    comparacion.finSemanaMayorActividad,
+    comparacion.finSemanaMenorActividad
+  ].forEach(function (periodo) {
+    if (
+      typeof periodo.balancePromedioPorDia !== "number" ||
+      typeof periodo.movimientosPromedioPorDia !== "number" ||
+      periodo.movimientosPromedioPorDia < 0
+    ) {
+      throw new Error("Una comparación temporal produjo indicadores inválidos.");
+    }
+  });
+});
 
 if (
   totalRetiros !== 4707132 ||
   totalArribos !== 4707207 ||
   patronesEstacion.length === 0 ||
-  resumenHorario.length !== 48
+  resumenHorario.length !== 48 ||
+  comparacionesPrioritarias.length !== 5
 ) {
   throw new Error("El resumen horario no coincide con los conteos auditados de los CSV.");
 }
@@ -371,17 +470,11 @@ printjson({
   arribosCatalogadosEnElIntervalo: totalArribos,
   balanceDeExtremosObservados: totalArribos - totalRetiros
 });
-print("\nCinco estaciones distintas y su patrón horario más pronunciado:");
-printjson(patronesPrioritarios.map(resumirPatron));
-print("\nTres horas laborables con mayor actividad observada:");
-printjson(horasLaborablesMayorActividad.map(resumirHora));
-print("\nTres horas laborables con menor actividad observada:");
-printjson(horasLaborablesMenorActividad.map(resumirHora));
-print("\nTres horas de fin de semana con mayor actividad observada:");
-printjson(horasFinSemanaMayorActividad.map(resumirHora));
-print("\nTres horas de fin de semana con menor actividad observada:");
-printjson(horasFinSemanaMenorActividad.map(resumirHora));
-print("\nLectura ejecutiva: cada estación aparece una sola vez con su combinación de día y hora más crítica.");
-print("Las tres horas de mayor actividad forman el pico observado y las tres de menor actividad su contraste; ambas se derivan de los datos.");
+print("\nFranjas de tres horas derivadas del volumen observado:");
+printjson(franjasComparadas);
+print("\nComparación temporal de cinco estaciones prioritarias:");
+printjson(comparacionesPrioritarias);
+print("\nLectura ejecutiva: cada estación aparece una sola vez con su patrón más pronunciado y cuatro periodos comparables.");
+print("Las franjas de mayor actividad forman el pico observado y las de menor actividad su contraste; ambas se derivan de los datos.");
 print("La magnitud del balance medio direccional es el valor absoluto del balance acumulado dividido entre los días comparables; los cambios de signo se cancelan y por eso no equivale al promedio de magnitudes diarias.");
 print("Los resultados describen extremos observados en la cohorte y no inventarios de bicicletas.");

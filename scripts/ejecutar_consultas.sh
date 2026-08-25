@@ -7,16 +7,24 @@ ROOT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/../../.." && pwd)
 
 mongodb_iniciar
 
-echo "1/3 Calculando el balance de la cohorte por estación..."
+echo "1/5 Calculando el balance de la cohorte por estación..."
 mongodb_ejecutar_archivo \
   "$ROOT_DIR/proyecto_final/ecobici/consultas/01_balance_cohorte.js"
 
-echo "2/3 Identificando patrones por día y hora local..."
+echo "2/5 Comparando patrones por día y hora local..."
 mongodb_ejecutar_archivo \
   "$ROOT_DIR/proyecto_final/ecobici/consultas/02_patrones_horarios.js"
 
-echo "3/3 Comparando la consistencia entre semanas completas..."
+echo "3/5 Comparando la consistencia entre semanas completas..."
 mongodb_ejecutar_archivo \
   "$ROOT_DIR/proyecto_final/ecobici/consultas/03_consistencia_semanal.js"
+
+echo "4/5 Identificando concentraciones geográficas de patrones horarios..."
+mongodb_ejecutar_archivo \
+  "$ROOT_DIR/proyecto_final/ecobici/consultas/04_concentracion_geografica.js"
+
+echo "5/5 Integrando la priorización ejecutiva del monitoreo..."
+mongodb_ejecutar_archivo \
+  "$ROOT_DIR/proyecto_final/ecobici/consultas/05_priorizacion_monitoreo.js"
 
 echo "Consultas ECOBICI completas y verificadas."
